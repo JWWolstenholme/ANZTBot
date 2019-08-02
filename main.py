@@ -44,7 +44,7 @@ async def handle_match(message):
     ids_to_usernames = {}
     
     # List slicing skips warmups
-    games = lobbyjson['games'][-firstToX:]
+    games = lobbyjson['games'][2:]
     
     # Store username -> tourney match score
     finalscore = {p1: 0, p2: 0}
