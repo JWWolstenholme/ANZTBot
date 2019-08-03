@@ -43,8 +43,8 @@ async def handle_match(message):
     
     # Get player usernames from lobby title
     players = re.search('\((?P<p1>.+?)\) vs(.)* \((?P<p2>.+?)\)', lobbyjson['match']['name'])
-    p1 = players.group('p1')
-    p2 = players.group('p2')
+    p1 = players.group('p1').lower()
+    p2 = players.group('p2').lower()
     
     # Stores a cache of ids to usernames reducing api calls
     ids_to_usernames = {}
@@ -64,10 +64,10 @@ async def handle_match(message):
             # Convert userid to username
             if userid not in ids_to_usernames.keys():
                 userjson = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={userid}')
-                username = userjson[0]['username']
+                username = userjson[0]['username'].lower()
                 ids_to_usernames[userid] = username
             else:
-                username = ids_to_usernames[userid]
+                username = ids_to_usernames[userid].lower()
             
             if score['pass'] == '1':
                 mapscores[username] = int(score['score'])
