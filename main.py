@@ -5,7 +5,7 @@ import aiohttp
 from settings import *
 
 client = discord.Client()
-resultpattern = re.compile('(https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/)(?P<id>[0-9]+) (?P<b1>(NM|nm|HD|hd|HR|hr|DT|dt|FM|fm)[0-9]) (?P<b2>(NM|nm|HD|hd|HR|hr|DT|dt|FM|fm)[0-9])(?P<wm>( [0-9]))?')
+resultpattern = re.compile(r'(https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/)(?P<id>[0-9]+) (?P<b1>(NM|nm|HD|hd|HR|hr|DT|dt|FM|fm)[0-9]) (?P<b2>(NM|nm|HD|hd|HR|hr|DT|dt|FM|fm)[0-9])(?P<wm>( [0-9]))?')
 
 
 @client.event
@@ -42,7 +42,7 @@ async def handle_match(message):
     lobbyjson = await request(f'https://osu.ppy.sh/api/get_match?k={apiKey}&mp={lobby_id}')
     
     # Get player usernames from lobby title
-    players = re.search('\((?P<p1>.+?)\) vs(.)* \((?P<p2>.+?)\)', lobbyjson['match']['name'])
+    players = re.search(r'\((?P<p1>.+?)\) vs(.)* \((?P<p2>.+?)\)', lobbyjson['match']['name'])
     p1 = players.group('p1').lower()
     p2 = players.group('p2').lower()
     
