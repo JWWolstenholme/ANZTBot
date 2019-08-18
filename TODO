@@ -8,5 +8,6 @@ Todo:
     Improvements:
         ☐ Improve handling of empty cells in mappool picking spreadsheet
         ☐ Get bot working on diony.live
+        ☐ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html
     Features:
         ☐ !picked command showing all picked maps
