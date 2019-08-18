@@ -110,10 +110,7 @@ async def handle_match(message):
     p2b = group.group('b2')
 
     warmups = group.group('wm')
-    if warmups is None:
-        warmups = 2
-    else:
-        warmups = int(warmups)
+    warmups = 2 if warmups is None else int(warmups)
 
     lobbyjson = await request(f'https://osu.ppy.sh/api/get_match?k={apiKey}&mp={lobby_id}')
 
@@ -132,6 +129,10 @@ async def handle_match(message):
     finalscore = {p1: 0, p2: 0}
 
     for bmap in games:
+        # Map was aborted
+        if bmap['end_time'] is None:
+            continue
+
         # Store username -> score on map
         mapscores = {}
 
@@ -143,7 +144,7 @@ async def handle_match(message):
                 username = userjson[0]['username'].lower()
                 ids_to_usernames[userid] = username
             else:
-                username = ids_to_usernames[userid].lower()
+                username = ids_to_usernames[userid]
 
             if score['pass'] == '1':
                 mapscores[username] = int(score['score'])
