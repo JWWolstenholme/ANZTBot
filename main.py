@@ -11,7 +11,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from settings import *
 
 client = discord.Client()
-resultpattern = re.compile(r'(https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/)(?P<id>[0-9]+)'
+resultpattern = re.compile(r'((https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/))(?P<id>[0-9]+)'
                            r' (?P<b1>(NM|nm|HD|hd|HR|hr|DT|dt|FM|fm)[0-9]) (?P<b2>(NM|nm|HD|hd|HR|hr|DT|dt|FM|fm)[0-9])'
                            r'(?P<wm>( [0-9]))?')
 poolerpattern = re.compile(r'\!(NM|nm|HD|hd|HR|hr|DT|dt|FM|fm|TB|tb)')

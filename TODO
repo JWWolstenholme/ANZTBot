@@ -1,13 +1,19 @@
 // Created with Todo+ VSCode extension  
 Todo: 
-    Bugs:
-        ✔ "https://osu.ppy.sh/mp/54169084 HD2 HR2" and "https://osu.ppy.sh/mp/54169903 NM5 DT2 0" cause key errors @started(19-08-19 03:37) @done(19-08-19 04:22) @lasted(45m9s)
-        ☐ "https://osu.ppy.sh/mp/53996635 DT1 HD2"
-        ☐ "https://osu.ppy.sh/mp/53996626 HD1 NM2"
-        ☐ "https://osu.ppy.sh/community/matches/53994610 HR2 HD2"
-    Improvements:
-        ☐ Improve handling of empty cells in mappool picking spreadsheet
-        ☐ Get bot working on diony.live
-        ☐ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html
-    Features:
-        ☐ !picked command showing all picked maps
+  Bugs:
+    ✔ "https://osu.ppy.sh/mp/54169084 HD2 HR2" and "https://osu.ppy.sh/mp/54169903 NM5 DT2 0" cause key errors @started(19-08-19 03:37) @done(19-08-19 04:22) @lasted(45m9s)
+        Caused by maps being aborted
+    ✔ "https://osu.ppy.sh/mp/53996635 DT1 HD2" @done(19-08-19 04:29)
+        Caused by maps being aborted
+    ✔ "https://osu.ppy.sh/mp/53996626 HD1 NM2" @started(19-08-19 04:30) @done(19-08-19 04:42) @lasted(12m9s)
+        Caused by player dc, no changes made
+    ✔ "https://osu.ppy.sh/community/matches/53994610 HR2 HD2" @started(19-08-19 04:43) @done(19-08-19 04:53) @lasted(10m33s)
+        Caused by a bug in regex which where it only checked if an id was present for one type of possible url type
+  Improvements:
+    ☐ Improve handling of empty cells in mappool picking spreadsheet
+    ☐ Get bot working on diony.live
+    ☐ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html
+    ☐ Allow referees to specify final score
+    ☐ Output match id when outputting match result
+  Features:
+    ☐ !picked command showing all picked maps
