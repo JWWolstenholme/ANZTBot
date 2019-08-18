@@ -6,6 +6,7 @@ import aiohttp
 import asyncio
 import traceback
 import gspread_asyncio
+import os
 from oauth2client.service_account import ServiceAccountCredentials
 # See https://i.imgur.com/PXyTi8L.png for settings.py format
 from settings import *
@@ -94,7 +95,9 @@ async def handle_pool(message):
 
 def get_creds():
     scope = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
-    return ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+    # Looks in the same directory as this script. Operating system and launch location independant.
+    client_secret = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'client_secret.json')
+    return ServiceAccountCredentials.from_json_keyfile_name(client_secret, scope)
 
 agcm = gspread_asyncio.AsyncioGspreadClientManager(get_creds)
 

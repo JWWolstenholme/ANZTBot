@@ -11,7 +11,7 @@ Todo:
         Caused by a bug in regex which where it only checked if an id was present for one type of possible url type
   Improvements:
     ☐ Improve handling of empty cells in mappool picking spreadsheet
-    ☐ Get bot working on diony.live
+    ✔ Get bot working on diony.live @started(19-08-19 04:57) @done(19-08-19 06:22) @lasted(1h25m37s)
     ☐ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html
     ☐ Allow referees to specify final score
     ☐ Output match id when outputting match result
