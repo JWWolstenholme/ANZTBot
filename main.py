@@ -170,6 +170,7 @@ async def handle_match(message):
 
 
 async def request(url):
+    json = {}
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as r:
             if r.status == 200:
