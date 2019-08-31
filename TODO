@@ -16,6 +16,11 @@ Todo:
       See 'crontab -e'
     ☐ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18)
       Struggling to get result parsing working because of command prefixes
+      Had to compromise and change result command to start with !format
+        ☐ Refactor the two large methods
+        ☐ Improve error handling. Currently does not catch BadArgument errors for example
+        ☐ Use .format instead of f-strings
+        ☐ Optimize imports
     ☐ Allow referees to specify final score
     ☐ Output match id when outputting match result
   Features:

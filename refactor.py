@@ -4,66 +4,83 @@ from settings import *
 import gspread_asyncio
 import re
 import aiohttp
+from aiohttp import ClientResponseError
 import os
 from oauth2client.service_account import ServiceAccountCredentials
 
+from functools import wraps
+import typing
+import traceback
+
 bot = commands.Bot(command_prefix='!')
 
-url_to_id_pattern = re.compile(r'((https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/))(?P<id>[0-9]+)')
+osu_mp_url = re.compile(r'((https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/))(?P<id>[0-9]+)')
+ban_format = re.compile(r'(nm|hd|hr|dt|fm)[0-9]', re.IGNORECASE)
 
 
+# Converter methods
 def url_to_id(url: str) -> int:
-    match = re.search(url_to_id_pattern, url)
+    match = re.search(osu_mp_url, url)
     if match:
-        lobby_id = int(match.group('id'))
-        return lobby_id
+        return int(match.group('id'))
     else:
-        raise SyntaxError("Mp link is invalid")
+        raise SyntaxError("\"{}\" is not a valid mp link".format(url))
 
 
-@bot.command()
-async def test(ctx, id: url_to_id):
-    await ctx.send(id)
+def to_ban(ban: str) -> str:
+    if not re.match(ban_format, ban):
+        raise SyntaxError("\"{}\" is not a valid ban".format(ban))
+    return ban
 
 
-@bot.command()
-async def nm(ctx):
-    await handle_pool(ctx, 'nm')
+# Decorater methods
+def send_typing(f):
+    @wraps(f)
+    async def wrapped(*args):
+        async with args[0].typing():
+            return await f(*args)
+    return wrapped
 
 
-@bot.command()
-async def hd(ctx):
-    await handle_pool(ctx, 'hd')
+# Checks
+def is_channel(name: str):
+    async def predicate(ctx):
+        return ctx.message.channel.name == name
+    return commands.check(predicate)
 
 
-@bot.command()
-async def hr(ctx):
-    await handle_pool(ctx, 'hr')
-
-
-@bot.command()
-async def dt(ctx):
-    await handle_pool(ctx, 'dt')
-
-
-@bot.command()
-async def fm(ctx):
-    await handle_pool(ctx, 'fm')
-
-
-@bot.command()
-async def tb(ctx):
-    await handle_pool(ctx, 'tb')
-
-
+# Event listeners
 @bot.event
 async def on_ready():
     print('Logged in as ' + bot.user.name)
 
 
+# Error handlers
+@bot.event
+async def on_error(ctx, error):
+    # Report to Diony
+    guild = bot.get_guild(255990138289651713)
+    channel = guild.get_channel(610482665573056512)
+    diony = guild.get_member(81316514216554496).mention
+
+    tracebackoutput = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+    await channel.send(f'{diony}\n\n{ctx.author.display_name} said `{ctx.message.content}` in `#{ctx.channel}` '
+                       f'of `{ctx.guild.name}` which caused ```{tracebackoutput}```')
+
+    # Report to User
+    await ctx.channel.send(f'{ctx.author.mention} There was an error executing that command. '
+                           f'Someone has been notified.', delete_after=10)
+
+# Commands
 bmapidtojsoncache = {}
 
-async def handle_pool(ctx, modpool: str):
+
+@bot.command(aliases=['hd', 'hr', 'dt', 'fm', 'tb'])
+@is_channel('mappool')
+@send_typing
+async def nm(ctx):
+    modpool = ctx.message.content.lstrip(bot.command_prefix)
+
     await ctx.message.delete()
 
     agc = await agcm.authorize()
@@ -104,12 +121,76 @@ async def handle_pool(ctx, modpool: str):
     await ctx.send(embed=embed)
 
 
+@bot.command()
+@is_channel('results')
+@send_typing
+async def format(ctx, id: url_to_id, match_id: int, ban1: to_ban, ban2: to_ban, warmups: typing.Optional[int]=2):
+    '''Handles the acquisition of match information through the osu api and sends a discord message'''
+    await ctx.message.delete()
+
+    lobbyjson = await request(f'https://osu.ppy.sh/api/get_match?k={apiKey}&mp={id}')
+    if lobbyjson['match'] == 0:
+        raise Exception('Osu api returned no matches for match id {}'.format(id))
+
+    # Get player usernames from lobby title
+    players = re.search(r'\((?P<p1>.+?)\) vs(.)* \((?P<p2>.+?)\)', lobbyjson['match']['name'])
+    p1 = players.group('p1').lower()
+    p2 = players.group('p2').lower()
+
+    # Stores a cache of ids to usernames reducing api calls
+    ids_to_usernames = {}
+
+    # List slicing skips warmups
+    games = lobbyjson['games'][warmups:]
+
+    # Store username -> tourney match score
+    finalscore = {p1: 0, p2: 0}
+
+    for bmap in games:
+        # Map was aborted
+        if bmap['end_time'] is None:
+            continue
+
+        # Store username -> score on map
+        mapscores = {}
+
+        for score in bmap['scores']:
+            userid = score['user_id']
+            # Convert userid to username
+            if userid not in ids_to_usernames.keys():
+                userjson = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={userid}')
+                username = userjson[0]['username'].lower()
+                ids_to_usernames[userid] = username
+            else:
+                username = ids_to_usernames[userid]
+
+            if score['pass'] == '1':
+                mapscores[username] = int(score['score'])
+            else:
+                mapscores[username] = 0
+
+        if mapscores[p1] > mapscores[p2]:
+            finalscore[p1] += 1
+        else:
+            finalscore[p2] += 1
+
+    emotes = [':zero:', ':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:',
+              ':keycap_ten: ']
+    embed = discord.Embed(title=f'ID: {match_id} - https://osu.ppy.sh/mp/{id}', color=0xe47607)
+    embed.set_author(name=f'{acronym} - {tourneyRound}')
+    embed.add_field(name=f'{p1} {emotes[finalscore[p1]]}', value=f'Banned {ban1.upper()}', inline=True)
+    embed.add_field(name=f'{emotes[finalscore[p2]]} {p2}', value=f'Banned {ban2.upper()}', inline=True)
+    embed.set_footer(text=f'Reported by {ctx.message.author.display_name}')
+    await ctx.send(embed=embed)
+
+
+# Utility methods
 async def request(url: str) -> dict:
-    json = {}
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as r:
-            if r.status == 200:
-                json = await r.json()
+            if r.status != 200:
+                raise Exception('External server returned status code other than 200')
+            json = await r.json()
     return json
 
 
@@ -119,5 +200,7 @@ def get_creds():
     client_secret = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'client_secret.json')
     return ServiceAccountCredentials.from_json_keyfile_name(client_secret, scope)
 
+
+# Entry point
 agcm = gspread_asyncio.AsyncioGspreadClientManager(get_creds)
 bot.run(botToken)
