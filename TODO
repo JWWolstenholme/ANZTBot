@@ -12,7 +12,8 @@ Todo:
   Improvements:
     ☐ Improve handling of empty cells in mappool picking spreadsheet
     ✔ Get bot working on diony.live @started(19-08-19 04:57) @done(19-08-19 06:22) @lasted(1h25m37s)
-    ☐ Get bot starting on boot on diony.live
+    ✔ Get bot starting on boot on diony.live @done(19-09-01 00:46)
+      See 'crontab -e'
     ☐ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18)
       Struggling to get result parsing working because of command prefixes
     ☐ Allow referees to specify final score
