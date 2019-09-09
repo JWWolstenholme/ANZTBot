@@ -12,17 +12,29 @@ Todo:
   Improvements:
     ☐ Improve handling of empty cells in mappool picking spreadsheet
     ✔ Get bot working on diony.live @started(19-08-19 04:57) @done(19-08-19 06:22) @lasted(1h25m37s)
+      Server was stuck in a situation where it couldn't update it's package list. Switched to a new Ubuntu distro instead of Debain
     ✔ Get bot starting on boot on diony.live @done(19-09-01 00:46)
       See 'crontab -e'
-    ☐ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18)
-      Struggling to get result parsing working because of command prefixes
-      Had to compromise and change result command to start with !format
-        ☐ Refactor the two large methods
-        ☐ Improve error handling. Currently does not catch BadArgument errors for example
-        ☐ Use .format instead of f-strings
-        ☐ Optimize imports
-    ☐ Allow referees to specify final score
-    ☐ Output match id when outputting match result
+    Refactor:
+      ✔ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18) @done(19-09-04 22:23) @lasted(2w2d3h5m42s)
+        Had to compromise and change result command to be invoked with !format
+      ☐ Use on_message() and get !format working without having to include "!format"
+      ☐ Use cogs
+        ☐ If cogs allow, add commands for adding and removing cogs from within discord
+      ☐ Refactor the two large methods
+      ☐ Improve error handling. Currently does not catch BadArgument errors for example
+      ☐ Use .format instead of f-strings
+      ☐ Optimize imports
+    ✔ Allow referees to specify final score @done(19-09-04 22:24)
+    ✔ Output match id when outputting match result @done(19-09-04 22:24)
   Features:
     ☐ !picked command showing all picked maps
+    ☐ !pick command which adds the pick to the sheet
     ☐ Show status as streaming when osuanzt channel is live
+      Could be done via webhook (which might require making a small web server for GET and POST request) or periodic REST calls.
+    ☐ !say command to make the bot say stuff. Could be funny or used for announcements
+    ☐ Integrate some features from https://github.com/LeaPhant/flowabot and find someway to credit it
+    Big stuff for future tourneys:
+      ☐ Predictions and associated rankings
+      ☐ Automatic reffing
+        CeilingWaffle is working on something that might include this
