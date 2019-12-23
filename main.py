@@ -48,6 +48,13 @@ def is_channel(*args: str):
     return commands.check(predicate)
 
 
+def is_bot(message):
+    return message.author.bot
+
+
+def is_webhook(message):
+    return message.webhook_id is not None
+
 # Event listeners
 @bot.event
 async def on_ready():
@@ -72,6 +79,26 @@ async def on_error(ctx, error):
 
 # Commands
 bmapidtojsoncache = {}
+
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def purge(ctx, limit: int):
+    await ctx.channel.purge(limit=limit)
+
+
+@bot.command(aliases=['purgebot'])
+@commands.has_permissions(administrator=True)
+async def botpurge(ctx, limit: int):
+    await ctx.message.delete()
+    await ctx.channel.purge(limit=limit, check=is_bot)
+
+
+@bot.command(aliases=['purgewebhook'])
+@commands.has_permissions(administrator=True)
+async def webhookpurge(ctx, limit: int):
+    await ctx.message.delete()
+    await ctx.channel.purge(limit=limit, check=is_webhook)
 
 
 @bot.command(name='del', aliases=['delete', 'undo'])
@@ -136,7 +163,7 @@ async def nm(ctx):
 async def format(ctx, id: url_to_id, match_id: int,
                  p1score: typing.Optional[int], p2score: typing.Optional[int],
                  p1ban: to_ban, p2ban: to_ban,
-                 warmups: typing.Optional[int]=2):
+                 warmups: typing.Optional[int] = 2):
     '''Handles the acquisition of match information through the osu api and sends a discord message'''
     await ctx.message.delete()
 
