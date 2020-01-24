@@ -63,7 +63,7 @@ async def on_ready():
 
 # Error handlers
 @bot.event
-async def on_error(ctx, error):
+async def on_command_error(ctx, error):
     # Report to Diony
     guild = bot.get_guild(255990138289651713)
     channel = guild.get_channel(610482665573056512)
@@ -111,50 +111,101 @@ async def delete(ctx):
             break
 
 
+@bot.command(aliases=['e'])
+@commands.has_permissions(administrator=True)
+async def embed(ctx, *argv: str):
+    embed = discord.Embed(title='This is a test', color=0xe47607)
+    # Loop over arguments two at a time, ignoring StopIteration caused by odd number of arguments
+    it = iter(argv)
+    for x in it:
+        try:
+            embed.add_field(name=x, value=next(it))
+        except StopIteration:
+            pass
+
+    embed.set_footer(text=f'Requested by {ctx.author.display_name}')
+    await ctx.send(embed=embed)
+
+
 @bot.command(aliases=['hd', 'hr', 'dt', 'fm', 'tb'])
 @is_channel('mappool')
 @send_typing
 async def nm(ctx):
-    modpool = ctx.invoked_with
-
+    # Prep
     await ctx.message.delete()
+    abreviations = {'nm': 'NoMod', 'hd': 'Hidden', 'hr': 'HardRock', 'dt': 'DoubleTime', 'fm': 'FreeMod', 'tb': 'TieBreaker'}
+    skips = list(abreviations.values()) + ['No beatmap added']
+    modpool = abreviations[ctx.invoked_with]
 
+    # Get spreadsheet as 2d array
     agc = await agcm.authorize()
-    sh = await agc.open('Mappool Selection')
+    sh = await agc.open('7S Mappool selection')
     ws = await sh.get_worksheet(0)
+    raw = await ws.get_all_values()
 
-    mods = ['nm', 'hd', 'hr', 'dt', 'fm', 'tb']
-    offset = mods.index(modpool)
+    # Strip down 2d array to relevant maps
+    # remove header row
+    raw = raw[1:]
+    # cut off cells on the right side
+    raw = [row[:11] for row in raw]
+    # Look down column 'C' looking for the specified modpool header, then collect rows until the modpool is over
+    found = False
+    maps = []
+    for row in raw:
+        if found and row[2] in skips:
+            break
+        if found:
+            maps.append(row)
+        if row[2] == modpool:
+            found = True
 
-    picked = await ws.col_values(offset * 3 + 1)
-    urls = await ws.col_values(offset * 3 + 2)
-    picker = await ws.col_values(offset * 3 + 3)
+    # Create user-readable message
+    output = f'>>> __**Selected {modpool} beatmaps:**__'
+    for map in maps:
+        emote = ':radio_button:' if map[0] == 'TRUE' else ':white_circle:'
+        mapname = map[2] if len(map[2]) < 50 else map[2][:47] + '...'
+        output += f'\n{emote} {mapname}\n             {map[4]}   |   {map[3]}*   |   {map[5]}bpm   |   {map[7]}ar   |   {map[8]}od'
+    await ctx.send(output)
 
-    picked = picked[1:]
-    urls = urls[1:]
-    picker = picker[1:]
 
-    embed = discord.Embed(title='Currently suggested ' + modpool.upper() + ' maps', color=0xe47607, url='https://doc'
-                          's.google.com/spreadsheets/d/1UsNH5BIvAkR1Fwb5vdR0I7zHQgSWmFFgemZh4v5cTJg/edit#gid=588134396')
-    for i, url in enumerate(urls):
-        bmapId = re.findall(r'\d+', url)[-1]
-        if bmapId in bmapidtojsoncache.keys():
-            mapJson = bmapidtojsoncache[bmapId]
-        else:
-            mapJson = await request(f'https://osu.ppy.sh/api/get_beatmaps?k={apiKey}&b={bmapId}')
-            mapJson = mapJson[0]
-            bmapidtojsoncache[bmapId] = mapJson
+@bot.command()
+@is_channel('mappool')
+@send_typing
+async def picked(ctx):
+    # Prep
+    await ctx.message.delete()
+    abreviations = {'nm': 'NoMod', 'hd': 'Hidden', 'hr': 'HardRock', 'dt': 'DoubleTime', 'fm': 'FreeMod', 'tb': 'TieBreaker'}
+    skips = list(abreviations.values()) + ['No beatmap added']
 
-        indent = '\u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b \u200b '
-        maptitle = f'{mapJson["artist"]} - {mapJson["title"]} [{mapJson["version"]}]'
-        emote = ':radio_button:' if picked[i] == 'TRUE' else ':white_circle:'
-        maplength = '{:d}:{:02d}'.format(int(int(mapJson['total_length']) / 60), int(mapJson['total_length']) % 60)
-        embed.add_field(name=f'{emote} {maptitle}', value=f'{indent}[Link]({url}) - {picker[i]} - {maplength}, '
-                        f'{float(mapJson["difficultyrating"]):.2f}*, {mapJson["bpm"]}bpm, {mapJson["diff_approach"]}ar,'
-                        f' {mapJson["diff_overall"]}od')
+    # Get spreadsheet as 2d array
+    agc = await agcm.authorize()
+    sh = await agc.open('7S Mappool selection')
+    ws = await sh.get_worksheet(0)
+    raw = await ws.get_all_values()
 
-    embed.set_footer(text=f'Requested by {ctx.author.display_name}')
-    await ctx.send(embed=embed)
+    # Strip down 2d array to relevant maps
+    # remove header row
+    raw = raw[1:]
+    # cut off cells on the right side
+    raw = [row[:11] for row in raw]
+
+    output = f'>>> __**Selected beatmaps**__'
+
+    # Look down column 'C' looking for the specified modpool header, then collect rows until the modpool is over
+    for modpool in list(abreviations.values()):
+        output += f'\n**{modpool}:**'
+        found = False
+        for row in raw:
+            if found and row[2] in skips:
+                break
+            if found and row[0] == 'TRUE':
+                emote = ':radio_button:' if row[0] == 'TRUE' else ':white_circle:'
+                mapname = row[2] if len(row[2]) < 50 else row[2][:47] + '...'
+                output += f'\n{emote} {mapname}\n             {row[4]}   |   {row[3]}*   |   {row[5]}bpm   |   {row[7]}ar   |   {row[8]}od'
+            if row[2] == modpool:
+                found = True
+
+    await ctx.send(output)
 
 
 @bot.command()
