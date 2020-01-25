@@ -67,34 +67,49 @@ async def on_ready():
 # Background tasks
 async def check_if_live(user_login):
     while True:
-        jsonresp = await request(f'https://api.twitch.tv/helix/streams?user_login={user_login}', {"Client-ID": clientID})
-        live = jsonresp['data'] != []
-        if live:
-            title = jsonresp['data'][0]['title']
-            title = title if title is not '' else 'with no title'
-            activity = discord.Streaming(name=title,
-                                         url=f'https://www.twitch.tv/{user_login}', platform='Twitch')
-        else:
-            activity = None
-        await bot.change_presence(activity=activity)
+        try:
+            jsonresp = await request(f'https://api.twitch.tv/helix/streams?user_login={user_login}', {"Client-ID": clientID})
+            live = jsonresp['data'] != []
+            if live:
+                title = jsonresp['data'][0]['title']
+                title = title if title is not '' else 'with no title'
+                activity = discord.Streaming(name=title,
+                                             url=f'https://www.twitch.tv/{user_login}', platform='Twitch')
+            else:
+                activity = None
+            await bot.change_presence(activity=activity)
+        except Exception as error:
+            await error_handler(error)
         await asyncio.sleep(30)
 
 
 # Error handlers
 @bot.event
 async def on_command_error(ctx, error):
+    await error_handler(error, ctx)
+
+
+@bot.event
+async def on_error(ctx, error):
+    await error_handler(error, ctx)
+
+
+async def error_handler(error, ctx=None):
     # Report to Diony
     guild = bot.get_guild(255990138289651713)
     channel = guild.get_channel(610482665573056512)
     diony = guild.get_member(81316514216554496).mention
 
     tracebackoutput = "".join(traceback.format_exception(type(error), error, error.__traceback__))
-    await channel.send(f'{diony}\n\n{ctx.author.display_name} said `{ctx.message.content}` in `#{ctx.channel}` '
-                       f'of `{ctx.guild.name}` which caused ```{tracebackoutput}```')
+    if ctx is not None:
+        await channel.send(f'{diony}\n\n{ctx.author.display_name} said `{ctx.message.content}` in `#{ctx.channel}` '
+                           f'of `{ctx.guild.name}` which caused ```{tracebackoutput}```')
+        # Report to User
+        await ctx.channel.send(f'{ctx.author.mention} There was an error executing that command. '
+                               f'Someone has been notified.', delete_after=10)
+    else:
+        await channel.send(f'{diony}\n\n```{tracebackoutput}```')
 
-    # Report to User
-    await ctx.channel.send(f'{ctx.author.mention} There was an error executing that command. '
-                           f'Someone has been notified.', delete_after=10)
 
 # Commands
 bmapidtojsoncache = {}
