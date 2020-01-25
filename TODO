@@ -17,6 +17,8 @@ Todo:
       Server was stuck in a situation where it couldn't update it's package list. Switched to a new Ubuntu distro instead of Debain
     ✔ Get bot starting on boot on diony.live @done(19-09-01 00:46)
       See 'crontab -e'
+    ☐ Check if stream is live using webhooks instead of REST calls
+    ☐ Show more info in user popout when stream is live like thumbnail and game.
     Refactor:
       ✔ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18) @done(19-09-04 22:23) @lasted(2w2d3h5m42s)
         Had to compromise and change result command to be invoked with !format
@@ -35,8 +37,9 @@ Todo:
   Features:
     ✔ !picked command showing all picked maps @done(20-01-25 01:34)
     ☐ !pick command which adds the pick to the sheet
-    ☐ Show status as streaming when osuanzt channel is live
+    ✔ Show status as streaming when osuanzt channel is live @done(20-01-25 18:05)
       Could be done via webhook (which might require making a small web server for GET and POST request) or periodic REST calls.
+      Implemented with periodeic REST calls
     ☐ !say command to make the bot say stuff. Could be funny or used for announcements
     ☐ Integrate some features from https://github.com/LeaPhant/flowabot and find someway to credit it
     Big stuff for future tourneys:

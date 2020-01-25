@@ -3,6 +3,7 @@ import discord
 from settings import *
 import gspread_asyncio
 import re
+import asyncio
 import aiohttp
 import os
 from oauth2client.service_account import ServiceAccountCredentials
@@ -55,10 +56,28 @@ def is_bot(message):
 def is_webhook(message):
     return message.webhook_id is not None
 
+
 # Event listeners
 @bot.event
 async def on_ready():
     print('Logged in as ' + bot.user.name)
+    bot.loop.create_task(check_if_live('osuanzt'))
+
+
+# Background tasks
+async def check_if_live(user_login):
+    while True:
+        jsonresp = await request(f'https://api.twitch.tv/helix/streams?user_login={user_login}', {"Client-ID": clientID})
+        live = jsonresp['data'] != []
+        if live:
+            title = jsonresp['data'][0]['title']
+            title = title if title is not '' else 'with no title'
+            activity = discord.Streaming(name=title,
+                                         url=f'https://www.twitch.tv/{user_login}', platform='Twitch')
+        else:
+            activity = None
+        await bot.change_presence(activity=activity)
+        await asyncio.sleep(30)
 
 
 # Error handlers
@@ -160,7 +179,7 @@ async def nm(ctx):
             found = True
 
     # Create user-readable message
-    output = f'>>> __**Selected {modpool} beatmaps:**__'
+    output = f'>>> __**Suggested {modpool} beatmaps:**__'
     for map in maps:
         emote = ':radio_button:' if map[0] == 'TRUE' else ':white_circle:'
         mapname = map[2] if len(map[2]) < 50 else map[2][:47] + '...'
@@ -218,7 +237,7 @@ async def format(ctx, id: url_to_id, match_id: int,
     '''Handles the acquisition of match information through the osu api and sends a discord message'''
     await ctx.message.delete()
 
-    lobbyjson = await request(f'https://osu.ppy.sh/api/get_match?k={apiKey}&mp={id}')
+    lobbyjson = await (f'https://osu.ppy.sh/api/get_match?k={apiKey}&mp={id}')
     if lobbyjson['match'] == 0:
         raise Exception('Osu api returned no matches for match id {}'.format(id))
 
@@ -278,9 +297,9 @@ async def format(ctx, id: url_to_id, match_id: int,
 
 
 # Utility methods
-async def request(url: str) -> dict:
+async def request(url: str, headers: dict = {}) -> dict:
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as r:
+        async with session.get(url, headers=headers) as r:
             if r.status != 200:
                 raise Exception('External server returned status code other than 200')
             json = await r.json()
