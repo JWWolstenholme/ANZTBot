@@ -16,6 +16,7 @@ bot = commands.Bot(command_prefix='!')
 
 osu_mp_url = re.compile(r'((https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/))(?P<id>[0-9]+)')
 ban_format = re.compile(r'(nm|hd|hr|dt|fm)[0-9]', re.IGNORECASE)
+match_id_format = re.compile(r'^([A-D]|[a-d])[0-9]+$')
 
 
 # Converter methods
@@ -62,6 +63,17 @@ def is_webhook(message):
 async def on_ready():
     print('Logged in as ' + bot.user.name)
     bot.loop.create_task(check_if_live('osuanzt'))
+    # await temp()
+
+
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+    if message.channel.name == 'results':
+        if re.match(match_id_format, message.content):
+            await format(message)
+    await bot.process_commands(message)
 
 
 # Background tasks
@@ -90,25 +102,38 @@ async def on_command_error(ctx, error):
 
 
 @bot.event
-async def on_error(ctx, error):
-    await error_handler(error, ctx)
+async def on_error(event, message=None):
+    await error_handler(message=message)
 
 
-async def error_handler(error, ctx=None):
+async def error_handler(error=None, ctx=None, message=None):
     # Report to Diony
-    guild = bot.get_guild(255990138289651713)
-    channel = guild.get_channel(610482665573056512)
-    diony = guild.get_member(81316514216554496).mention
+    dioguild = bot.get_guild(255990138289651713)
+    diochannel = dioguild.get_channel(610482665573056512)
+    diony = dioguild.get_member(81316514216554496).mention
 
-    tracebackoutput = "".join(traceback.format_exception(type(error), error, error.__traceback__))
-    if ctx is not None:
-        await channel.send(f'{diony}\n\n{ctx.author.display_name} said `{ctx.message.content}` in `#{ctx.channel}` '
-                           f'of `{ctx.guild.name}` which caused ```{tracebackoutput}```')
-        # Report to User
-        await ctx.channel.send(f'{ctx.author.mention} There was an error executing that command. '
-                               f'Someone has been notified.', delete_after=10)
+    if error is not None:
+        tracebackoutput = "".join(traceback.format_exception(type(error), error, error.__traceback__))
     else:
-        await channel.send(f'{diony}\n\n```{tracebackoutput}```')
+        tracebackoutput = "".join(traceback.format_exception(*sys.exc_info()))
+
+    if ctx is not None:
+        author = ctx.author
+        content = ctx.message.content
+        channel = ctx.channel
+        server = ctx.guild.name
+    elif message is not None:
+        author = message.author
+        content = message.content
+        channel = message.channel
+        server = message.guild.name
+    else:
+        await diochannel.send(f'{diony}\n\n```{tracebackoutput}```')
+
+    await diochannel.send(f'{diony}\n\n{author.display_name} said `{content}` in `#{channel}` '
+                          f'of `{server}` which caused ```{tracebackoutput}```')
+    # Report to User
+    await channel.send(f'{author.mention} There was an error executing that command.', delete_after=10)
 
 
 # Commands
