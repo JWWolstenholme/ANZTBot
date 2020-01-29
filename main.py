@@ -2,10 +2,13 @@ from discord.ext import commands
 import discord
 from settings import *
 import gspread_asyncio
+from gspread.exceptions import CellNotFound
 import re
 import asyncio
 import aiohttp
 import os
+import sys
+import inflect
 from oauth2client.service_account import ServiceAccountCredentials
 
 from functools import wraps
@@ -13,10 +16,16 @@ import typing
 import traceback
 
 bot = commands.Bot(command_prefix='!')
+infeng = inflect.engine()
 
+# Regex
 osu_mp_url = re.compile(r'((https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/))(?P<id>[0-9]+)')
 ban_format = re.compile(r'(nm|hd|hr|dt|fm)[0-9]', re.IGNORECASE)
 match_id_format = re.compile(r'^([A-D]|[a-d])[0-9]+$')
+
+# Caches
+userIDs_to_usernames = {}
+bmapIDs_to_json = {}
 
 
 # Converter methods
@@ -251,73 +260,118 @@ async def picked(ctx):
     await ctx.send(output)
 
 
-@bot.command()
-@is_channel('results')
-@send_typing
-async def format(ctx, id: url_to_id, match_id: int,
-                 p1score: typing.Optional[int], p2score: typing.Optional[int],
-                 p1ban: to_ban, p2ban: to_ban,
-                 warmups: typing.Optional[int] = 2):
-    '''Handles the acquisition of match information through the osu api and sends a discord message'''
-    await ctx.message.delete()
+async def format(message):
+    """This method isn't a @bot.command() so that users do not need to use the command prefix in the one
+    channel this is used in. This method is called from on_message() when a match id is posted in #results.
+    """
+    async with message.channel.typing():
+        await message.delete()
+        # Get spreadsheet from google sheets
+        agc = await agcm.authorize()
+        sh = await agc.open('ANZT 7 Summer')
+        ws = await sh.worksheet(schedule_sheet_name)
 
-    lobbyjson = await (f'https://osu.ppy.sh/api/get_match?k={apiKey}&mp={id}')
-    if lobbyjson['match'] == 0:
-        raise Exception('Osu api returned no matches for match id {}'.format(id))
+        # Get details for specified match from sheet
+        match_id = message.content.upper()
+        try:
+            cell = await ws.find(match_id)
+        except CellNotFound:
+            await message.channel.send(f'{message.author.mention} Couldn\'t find a match with ID: {match_id}', delete_after=10)
+            return
+        row = await ws.row_values(cell.row)
 
-    # Get player usernames from lobby title
-    players = re.search(r'\((?P<p1>.+?)\) vs(.)* \((?P<p2>.+?)\)', lobbyjson['match']['name'])
-    p1 = players.group('p1').lower()
-    p2 = players.group('p2').lower()
+        # Get lobby id from sheet
+        try:
+            lobby_id = url_to_id(row[12])
+        except (SyntaxError, IndexError):
+            await message.channel.send(f'{message.author.mention} Couldn\'t find a valid mp link on the sheet for match: {match_id}', delete_after=10)
+            return
 
-    # Stores a cache of ids to usernames reducing api calls
-    ids_to_usernames = {}
+        # Get lobby info with osu api
+        lobbyjson = await request(f'https://osu.ppy.sh/api/get_match?k={apiKey}&mp={lobby_id}')
+        if lobbyjson['match'] == 0:
+            await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) returned no results for match: {match_id}', delete_after=10)
+            return
+        elif lobbyjson['match']['end_time'] is None:
+            await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) looks to be incomplete. Use !mp close', delete_after=10)
+            return
 
-    # List slicing skips warmups
-    games = lobbyjson['games'][warmups:]
+        # Gather info together from sheet
+        p1 = {'username': row[1], 'score': row[2], 'ban': row[7][1:4], 'roll': row[8]}
+        p2 = {'username': row[4], 'score': row[3], 'ban': row[9][1:4], 'roll': row[10]}
+        if '' in p1.values() or '' in p2.values():
+            await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
+                                       f'or both players on the sheet for match: {match_id}')
+            return
+        # Used to line up the scores vertically by left justifying the username to this amount
+        longest_name_len = len(max([p1['username'], p2['username']], key=len))
+        # Highlight who the winner was using bold and an emoji
+        if p1['score'] > p2['score']:
+            p1['score'] = f'**{p1["score"]}** :trophy:'
+        elif p1['score'] < p2['score']:
+            p2['score'] = f'**{p2["score"]}** :trophy:'
 
-    # Store username -> tourney match score
-    finalscore = {p1: 0, p2: 0}
-    if p1score is not None and p2score is not None:
-        finalscore[p1] = p1score
-        finalscore[p2] = p2score
-    else:
-        for bmap in games:
-            # Map was aborted
-            if bmap['end_time'] is None:
-                continue
+        # Construct the embed
+        description = (f':flag_{country[p1["username"]]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
+                       f'Roll: {p1["roll"]} - Ban: {p1["ban"]}\n'
+                       f':flag_{country[p2["username"]]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
+                       f'Roll: {p2["roll"]} - Ban: {p2["ban"]}')
+        embed = discord.Embed(title=f'Match ID: {match_id}', description=description, color=0xe47607)
+        embed.set_author(name=f'{tourneyRound}: ({p1["username"]}) vs ({p2["username"]})',
+                         url=f'https://osu.ppy.sh/mp/{lobby_id}', icon_url='https://i.imgur.com/Y1zRCd8.png')
+        embed.set_thumbnail(url='https://i.imgur.com/Y1zRCd8.png')
+        try:
+            referee = row[13]
+            if referee == '':
+                raise IndexError()
+            embed.set_footer(text=f'Refereed by {referee}')
+        except IndexError:
+            embed.set_footer(text=f'Reported by {message.author.display_name}')
 
-            # Store username -> score on map
-            mapscores = {}
-
-            for score in bmap['scores']:
-                userid = score['user_id']
-                # Convert userid to username
-                if userid not in ids_to_usernames.keys():
-                    userjson = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={userid}')
-                    username = userjson[0]['username'].lower()
-                    ids_to_usernames[userid] = username
-                else:
-                    username = ids_to_usernames[userid]
-
-                if score['pass'] == '1':
-                    mapscores[username] = int(score['score'])
-                else:
-                    mapscores[username] = 0
-
-            if mapscores[p1] > mapscores[p2]:
-                finalscore[p1] += 1
+        # Construct the fields within the embed, displaying each pick and score differences
+        firstpick = row[11]
+        if firstpick not in ['P1', 'P2']:
+            await message.channel.send(f'{message.author.mention} Failed to find who picked first by looking at the'
+                                       f'sheet for match: {match_id}', delete_after=10)
+            return
+        orange = ':small_orange_diamond:'
+        blue = ':small_blue_diamond:'
+        # Only look at games that used a beatmap from the mappool and were not aborted
+        filteredgames = [game for game in lobbyjson['games'] if game['end_time'] is not None and game['beatmap_id'] in pool]
+        for i, game in enumerate(filteredgames):
+            emote = orange if i % 2 == 0 else blue
+            # Alternate players starting from whoever the sheet says had first pick
+            picker = p1['username'] if (i % 2 == 0 if firstpick == 'P1' else i % 2 != 0) else p2['username']
+            bmapID = game['beatmap_id']
+            # Retreive beatmap information from osu api or cache
+            if bmapID not in bmapIDs_to_json.keys():
+                bmapJson = await request(f'https://osu.ppy.sh/api/get_beatmaps?k={apiKey}&b={bmapID}')
+                bmapJson = bmapJson[0]
+                bmapIDs_to_json[bmapID] = bmapJson
             else:
-                finalscore[p2] += 1
+                bmapJson = bmapIDs_to_json[bmapID]
+            bmapFormatted = f"{bmapJson['artist']} - {bmapJson['title']} [{bmapJson['version']}]"
 
-    emotes = [':zero:', ':one:', ':two:', ':three:', ':four:', ':five:', ':six:', ':seven:', ':eight:', ':nine:',
-              ':keycap_ten: ']
-    embed = discord.Embed(title=f'ID: {match_id} - https://osu.ppy.sh/mp/{id}', color=0xe47607)
-    embed.set_author(name=f'{acronym} - {tourneyRound}')
-    embed.add_field(name=f'{p1} {emotes[finalscore[p1]]}', value=f'Banned {p1ban.upper()}', inline=True)
-    embed.add_field(name=f'{emotes[finalscore[p2]]} {p2}', value=f'Banned {p2ban.upper()}', inline=True)
-    embed.set_footer(text=f'Reported by {ctx.message.author.display_name}')
-    await ctx.send(embed=embed)
+            # Filter out scores made by referees
+            scores = [score for score in game['scores'] if score['user_id'] not in referees]
+            # One or both players didn't play a map
+            if len(scores) < 2:
+                await message.channel.send(f'{message.author.mention} It looks like a score is missing in the {infeng.ordinal(i+1)} mappool map for match: {match_id}', delete_after=10)
+                return
+            scores.sort(key=lambda score: score['score'])
+            # Retreive winner's username from osu api or cache
+            if scores[0]['user_id'] not in userIDs_to_usernames.keys():
+                winnerjson = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={scores[0]["user_id"]}')
+                winner = winnerjson[0]['username']
+                userIDs_to_usernames[scores[0]['user_id']] = winner
+            else:
+                winner = userIDs_to_usernames[scores[0]['user_id']]
+
+            embed.add_field(name=f'{emote}Pick #{i+1} by __{picker}__ [{pool[bmapID]}]',
+                            value=f'[{bmapFormatted}](https://osu.ppy.sh/b/{bmapID})\n'
+                            f'__{winner} ({scores[0]["score"]})__ wins by **({scores[0]["score"]-scores[1]["score"]})**', inline=False)
+
+        await message.channel.send(embed=embed)
 
 
 # Utility methods
