@@ -170,22 +170,6 @@ async def delete(ctx):
             break
 
 
-@bot.command(aliases=['e'])
-@commands.has_permissions(administrator=True)
-async def embed(ctx, *argv: str):
-    embed = discord.Embed(title='This is a test', color=0xe47607)
-    # Loop over arguments two at a time, ignoring StopIteration caused by odd number of arguments
-    it = iter(argv)
-    for x in it:
-        try:
-            embed.add_field(name=x, value=next(it))
-        except StopIteration:
-            pass
-
-    embed.set_footer(text=f'Requested by {ctx.author.display_name}')
-    await ctx.send(embed=embed)
-
-
 @bot.command(aliases=['hd', 'hr', 'dt', 'fm', 'tb'])
 @is_channel('mappool')
 @send_typing
