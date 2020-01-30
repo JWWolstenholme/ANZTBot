@@ -9,6 +9,7 @@ import aiohttp
 import os
 import sys
 import inflect
+from io import StringIO
 from oauth2client.service_account import ServiceAccountCredentials
 
 from functools import wraps
@@ -72,7 +73,6 @@ def is_webhook(message):
 async def on_ready():
     print('Logged in as ' + bot.user.name)
     bot.loop.create_task(check_if_live('osuanzt'))
-    # await temp()
 
 
 @bot.event
@@ -137,10 +137,23 @@ async def error_handler(error=None, ctx=None, message=None):
         channel = message.channel
         server = message.guild.name
     else:
-        await diochannel.send(f'{diony}\n\n```{tracebackoutput}```')
+        # Fill out the rest of the message with traceback output.
+        output = f'{diony}\n\n``````'
+        if len(tracebackoutput)+len(output) > 2000:
+            await diochannel.send(output.replace('``````', f'```{tracebackoutput[:2000-len(output)]}```'),
+                                  file=discord.File(fp=StringIO(tracebackoutput), filename='fulltraceback.txt'))
+        else:
+            await diochannel.send(output.replace('``````', f'```{tracebackoutput}```'))
+        return
 
-    await diochannel.send(f'{diony}\n\n{author.display_name} said `{content}` in `#{channel}` '
-                          f'of `{server}` which caused ```{tracebackoutput}```')
+    # Fill out the rest of the message with traceback output.
+    output = (f'{diony}\n\n{author.display_name} said `{content}` in `#{channel}` '
+              f'of `{server}` which caused ``````')
+    if len(tracebackoutput)+len(output) > 2000:
+        await diochannel.send(output.replace('``````', f'```{tracebackoutput[:2000-len(output)]}```'),
+                              file=discord.File(fp=StringIO(tracebackoutput), filename='fulltraceback.txt'))
+    else:
+        await diochannel.send(output.replace('``````', f'```{tracebackoutput]}```'))
     # Report to User
     await channel.send(f'{author.mention} There was an error executing that command.', delete_after=10)
 

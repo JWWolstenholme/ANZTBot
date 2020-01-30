@@ -10,6 +10,9 @@ Todo:
     ✔ "https://osu.ppy.sh/community/matches/53994610 HR2 HD2" @started(19-08-19 04:43) @done(19-08-19 04:53) @lasted(10m33s)
       Caused by a bug in regex which where it only checked if an id was present for one type of possible url type
     ✔ Spreadsheet scraping does not work on ANZT7S' new spreadsheet format @done(20-01-25 01:31)
+    ☐ The bot dies eventually after hours of running and requires restarting
+    ✔ The bot can not handle tracebacks greater than just under 2000 characters long @done(20-01-30 21:59)
+    ☐ The bot sometimes fails to connect to the twitch api
   Improvements:
     ✔ Improve handling of empty cells in mappool picking spreadsheet @done(20-01-25 01:31)
       Fixed when spreadsheet scraping was updated for ANZT7S
