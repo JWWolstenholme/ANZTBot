@@ -1,20 +1,21 @@
-from discord.ext import commands
-import discord
-from settings import *
-import gspread_asyncio
-from gspread.exceptions import CellNotFound
-import re
 import asyncio
-import aiohttp
 import os
+import re
 import sys
-import inflect
+import traceback
+import typing
+from functools import wraps
 from io import StringIO
+
+import aiohttp
+import discord
+import gspread_asyncio
+import inflect
+from discord.ext import commands
+from gspread.exceptions import CellNotFound
 from oauth2client.service_account import ServiceAccountCredentials
 
-from functools import wraps
-import typing
-import traceback
+from settings import *
 
 bot = commands.Bot(command_prefix='!')
 infeng = inflect.engine()
