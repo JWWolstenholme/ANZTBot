@@ -154,7 +154,7 @@ async def error_handler(error=None, ctx=None, message=None):
         await diochannel.send(output.replace('``````', f'```{tracebackoutput[:2000-len(output)]}```'),
                               file=discord.File(fp=StringIO(tracebackoutput), filename='fulltraceback.txt'))
     else:
-        await diochannel.send(output.replace('``````', f'```{tracebackoutput]}```'))
+        await diochannel.send(output.replace('``````', f'```{tracebackoutput}```'))
     # Report to User
     await channel.send(f'{author.mention} There was an error executing that command.', delete_after=10)
 
