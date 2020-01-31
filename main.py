@@ -100,6 +100,9 @@ async def check_if_live(user_login):
             else:
                 activity = None
             await bot.change_presence(activity=activity)
+        # This catches timeouts when I run this on my shitty internet
+        except aiohttp.client_exceptions.ClientConnectorError:
+            pass
         except Exception as error:
             await error_handler(error)
         await asyncio.sleep(30)
@@ -351,12 +354,12 @@ async def format(message):
         orange = ':small_orange_diamond:'
         blue = ':small_blue_diamond:'
         # Only look at games that used a beatmap from the mappool and were not aborted
-        filteredgames = [game for game in lobbyjson['games'] if game['end_time'] is not None and game['beatmap_id'] in pool]
+        filteredgames = [game for game in lobbyjson['games'] if game['end_time'] is not None and int(game['beatmap_id']) in pool]
         for i, game in enumerate(filteredgames):
             emote = orange if i % 2 == 0 else blue
             # Alternate players starting from whoever the sheet says had first pick
             picker = p1['username'] if (i % 2 == 0 if firstpick == 'P1' else i % 2 != 0) else p2['username']
-            bmapID = game['beatmap_id']
+            bmapID = int(game['beatmap_id'])
             # Retreive beatmap information from osu api or cache
             if bmapID not in bmapIDs_to_json.keys():
                 bmapJson = await request(f'https://osu.ppy.sh/api/get_beatmaps?k={apiKey}&b={bmapID}')
@@ -367,12 +370,12 @@ async def format(message):
             bmapFormatted = f"{bmapJson['artist']} - {bmapJson['title']} [{bmapJson['version']}]"
 
             # Filter out scores made by referees
-            scores = [score for score in game['scores'] if score['user_id'] not in referees]
+            scores = [score for score in game['scores'] if int(score['user_id']) not in referees]
             # One or both players didn't play a map
             if len(scores) < 2:
                 await message.channel.send(f'{message.author.mention} It looks like a score is missing in the {infeng.ordinal(i+1)} mappool map for match: {match_id}', delete_after=10)
                 return
-            scores.sort(key=lambda score: score['score'])
+            scores.sort(key=lambda score: int(score['score']), reverse=True)
             # Retreive winner's username from osu api or cache
             if scores[0]['user_id'] not in userIDs_to_usernames.keys():
                 winnerjson = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={scores[0]["user_id"]}')
@@ -383,7 +386,7 @@ async def format(message):
 
             embed.add_field(name=f'{emote}Pick #{i+1} by __{picker}__ [{pool[bmapID]}]',
                             value=f'[{bmapFormatted}](https://osu.ppy.sh/b/{bmapID})\n'
-                            f'__{winner} ({scores[0]["score"]})__ wins by **({scores[0]["score"]-scores[1]["score"]})**', inline=False)
+                            f'__{winner} ({int(scores[0]["score"]):,})__ wins by **({int(scores[0]["score"])-int(scores[1]["score"]):,})**', inline=False)
 
         await message.channel.send(embed=embed)
 
