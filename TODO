@@ -15,8 +15,9 @@ Todo:
     ✔ The bot can not handle tracebacks greater than just under 2000 characters long @done(20-01-30 21:59)
     ✔ The bot sometimes fails to connect to the twitch api @done(20-01-31 23:19)
       This was caused by timeouts due to my bad internet so It just waits and tries again later now
-    ☐ The bot doesn't show any picks for match results
+    ✔ The bot doesn't show any picks for match results @done(20-02-08 05:38)
       This was due to teething issues regarding now having lobbies to test on. It was mostly caused by not converting strings from the api to ints
+    ☐ The bot will show a tiebreaker map as if it was picked by the next player
   Improvements:
     ✔ Improve handling of empty cells in mappool picking spreadsheet @done(20-01-25 01:31)
       Fixed when spreadsheet scraping was updated for ANZT7S
@@ -29,6 +30,9 @@ Todo:
       Not possible due to limitations for bots
     ✔ Use a new design for result embeds @done(20-01-30 04:53)
     ✔ Use the spreadsheet to get results, instead of requiring referee input @done(20-01-30 04:53)
+    ☐ Allow reporting of forfeited matches
+      Maybe allow for reporting a reason
+    ☐ Allow matches to be reported before the mp has closed
     Refactor:
       ✔ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18) @done(19-09-04 22:23) @lasted(2w2d3h5m42s)
         Had to compromise and change result command to be invoked with !format
@@ -41,7 +45,7 @@ Todo:
         I was using the on_error event instead of the on_command_error
       ✘ Use .format instead of f-strings @cancelled(20-01-25 01:33)
         f-strings are superior
-      ☐ Optimize imports
+      ✔ Optimize imports @done(20-02-08 06:27)
       ✔ Allow referees to specify final score @done(19-09-04 22:24)
       ✔ Output match id when outputting match result @done(19-09-04 22:24)
   Features:
