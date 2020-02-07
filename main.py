@@ -318,7 +318,7 @@ async def format(message):
         p2 = {'username': row[4], 'score': row[3], 'ban': row[9][1:4], 'roll': row[10]}
         if '' in p1.values() or '' in p2.values():
             await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
-                                       f'or both players on the sheet for match: {match_id}')
+                                       f'or both players on the sheet for match: {match_id}', delete_after=10)
             return
         # Used to line up the scores vertically by left justifying the username to this amount
         longest_name_len = len(max([p1['username'], p2['username']], key=len))
