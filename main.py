@@ -384,7 +384,12 @@ async def format(message):
             else:
                 winner = userIDs_to_usernames[scores[0]['user_id']]
 
-            embed.add_field(name=f'{emote}Pick #{i+1} by __{picker}__ [{pool[bmapID]}]',
+            # Check if map was tiebreaker
+            if pool[bmapID] == 'TB':
+                firstline = f':diamond_shape_with_a_dot_inside: **Tiebreaker**'
+            else:
+                firstline = f'{emote}Pick #{i+1} by __{picker}__ [{pool[bmapID]}]'
+            embed.add_field(name=firstline,
                             value=f'[{bmapFormatted}](https://osu.ppy.sh/b/{bmapID})\n'
                             f'__{winner} ({int(scores[0]["score"]):,})__ wins by **({int(scores[0]["score"])-int(scores[1]["score"]):,})**', inline=False)
 

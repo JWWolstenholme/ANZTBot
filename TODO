@@ -17,7 +17,7 @@ Todo:
       This was caused by timeouts due to my bad internet so It just waits and tries again later now
     ✔ The bot doesn't show any picks for match results @done(20-02-08 05:38)
       This was due to teething issues regarding now having lobbies to test on. It was mostly caused by not converting strings from the api to ints
-    ☐ The bot will show a tiebreaker map as if it was picked by the next player
+    ✔ The bot will show a tiebreaker map as if it was picked by the next player @done(20-02-09 04:02)
   Improvements:
     ✔ Improve handling of empty cells in mappool picking spreadsheet @done(20-01-25 01:31)
       Fixed when spreadsheet scraping was updated for ANZT7S
@@ -34,6 +34,7 @@ Todo:
       Maybe allow for reporting a reason
     ✔ Allow matches to be reported before the mp has closed @done(20-02-09 03:49)
     ☐ Allow for proper parsing of lobbies that continued past the match was over. For showmatches of other maps in the pool for exmaple
+    ☐ Allow for editing/reproccesing of previous match reports
     Refactor:
       ✔ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18) @done(19-09-04 22:23) @lasted(2w2d3h5m42s)
         Had to compromise and change result command to be invoked with !format
