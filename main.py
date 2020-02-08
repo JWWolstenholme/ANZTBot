@@ -309,9 +309,9 @@ async def format(message):
         if lobbyjson['match'] == 0:
             await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) returned no results for match: {match_id}', delete_after=10)
             return
-        elif lobbyjson['match']['end_time'] is None:
-            await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) looks to be incomplete. Use !mp close', delete_after=10)
-            return
+        # elif lobbyjson['match']['end_time'] is None:
+        #     await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) looks to be incomplete. Use !mp close', delete_after=10)
+        #     return
 
         # Gather info together from sheet
         p1 = {'username': row[1], 'score': row[2], 'ban': row[7][1:4], 'roll': row[8]}

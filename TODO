@@ -32,7 +32,8 @@ Todo:
     ✔ Use the spreadsheet to get results, instead of requiring referee input @done(20-01-30 04:53)
     ☐ Allow reporting of forfeited matches
       Maybe allow for reporting a reason
-    ☐ Allow matches to be reported before the mp has closed
+    ✔ Allow matches to be reported before the mp has closed @done(20-02-09 03:49)
+    ☐ Allow for proper parsing of lobbies that continued past the match was over. For showmatches of other maps in the pool for exmaple
     Refactor:
       ✔ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18) @done(19-09-04 22:23) @lasted(2w2d3h5m42s)
         Had to compromise and change result command to be invoked with !format
