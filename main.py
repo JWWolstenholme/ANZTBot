@@ -353,6 +353,7 @@ async def format(message):
             return
         orange = ':small_orange_diamond:'
         blue = ':small_blue_diamond:'
+        tiebreaker = ':diamond_shape_with_a_dot_inside:'
         # Only look at games that used a beatmap from the mappool and were not aborted
         filteredgames = [game for game in lobbyjson['games'] if game['end_time'] is not None and int(game['beatmap_id']) in pool]
         for i, game in enumerate(filteredgames):
@@ -386,7 +387,7 @@ async def format(message):
 
             # Check if map was tiebreaker
             if pool[bmapID] == 'TB':
-                firstline = f':diamond_shape_with_a_dot_inside: **Tiebreaker**'
+                firstline = f'{tiebreaker} **Tiebreaker**'
             else:
                 firstline = f'{emote}Pick #{i+1} by __{picker}__ [{pool[bmapID]}]'
             embed.add_field(name=firstline,
