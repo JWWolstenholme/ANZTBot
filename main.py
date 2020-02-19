@@ -94,7 +94,7 @@ async def check_if_live(user_login):
             live = jsonresp['data'] != []
             if live:
                 title = jsonresp['data'][0]['title']
-                title = title if title is not '' else 'with no title'
+                title = title if title != '' else 'with no title'
                 activity = discord.Streaming(name=title,
                                              url=f'https://www.twitch.tv/{user_login}', platform='Twitch')
             else:
