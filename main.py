@@ -372,10 +372,6 @@ async def format(message):
 
             # Filter out scores made by referees
             scores = [score for score in game['scores'] if int(score['user_id']) not in referees]
-            # One or both players didn't play a map
-            if len(scores) < 2:
-                await message.channel.send(f'{message.author.mention} It looks like a score is missing in the {infeng.ordinal(i+1)} mappool map for match: {match_id}', delete_after=10)
-                return
             scores.sort(key=lambda score: int(score['score']), reverse=True)
             # Retreive winner's username from osu api or cache
             if scores[0]['user_id'] not in userIDs_to_usernames.keys():
@@ -390,9 +386,16 @@ async def format(message):
                 firstline = f'{tiebreaker} **Tiebreaker**'
             else:
                 firstline = f'{emote}Pick #{i+1} by __{picker}__ [{pool[bmapID]}]'
-            embed.add_field(name=firstline,
-                            value=f'[{bmapFormatted}](https://osu.ppy.sh/b/{bmapID})\n'
-                            f'__{winner} ({int(scores[0]["score"]):,})__ wins by **({int(scores[0]["score"])-int(scores[1]["score"]):,})**', inline=False)
+            # One or both players didn't play a map
+            if len(scores) < 2:
+                # await message.channel.send(f'{message.author.mention} It looks like a score is missing in the {infeng.ordinal(i+1)} mappool map for match: {match_id}', delete_after=10)
+                embed.add_field(name=firstline,
+                                value=f'[{bmapFormatted}](https://osu.ppy.sh/b/{bmapID})\n'
+                                f'__{winner} ({int(scores[0]["score"]):,})__ wins. Other score missing.', inline=False)
+            else:
+                embed.add_field(name=firstline,
+                                value=f'[{bmapFormatted}](https://osu.ppy.sh/b/{bmapID})\n'
+                                f'__{winner} ({int(scores[0]["score"]):,})__ wins by **({int(scores[0]["score"])-int(scores[1]["score"]):,})**', inline=False)
 
         await message.channel.send(embed=embed)
 
