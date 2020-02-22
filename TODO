@@ -60,7 +60,7 @@ Todo:
       Implemented with periodeic REST calls
     ☐ !say command to make the bot say stuff. Could be funny or used for announcements
     ☐ Integrate some features from https://github.com/LeaPhant/flowabot and find someway to credit it
-    ☐ Add a stream ping role
+    ✔ Add a stream ping role @done(20-02-23 08:09)
       Will require detecting if the stream is a different stream than the last time the bot checked and allow for users to add themselves to the role
     ☐ Allow for editing/reproccesing of previous match reports
     ☐ Implement a sort of ticket system for reschedules. Should makes it easier for organisers

@@ -4,6 +4,7 @@ import re
 import sys
 import traceback
 import typing
+from datetime import datetime
 from functools import wraps
 from io import StringIO
 
@@ -11,6 +12,8 @@ import aiohttp
 import discord
 import gspread_asyncio
 import inflect
+import pyrfc3339
+import pytz
 from discord.ext import commands
 from gspread.exceptions import CellNotFound
 from oauth2client.service_account import ServiceAccountCredentials
@@ -28,6 +31,7 @@ match_id_format = re.compile(r'^([A-D]|[a-d])[0-9]+$')
 # Caches
 userIDs_to_usernames = {}
 bmapIDs_to_json = {}
+last_ping = None
 
 
 # Converter methods
@@ -77,7 +81,10 @@ def is_webhook(message):
 @bot.event
 async def on_ready():
     print('Logged in as ' + bot.user.name)
-    bot.loop.create_task(check_if_live('osuanzt'))
+    bot.loop.create_task(check_if_live(twitchannel))
+    global last_ping
+    with open('last_ping.txt', 'r') as f:
+        last_ping = datetime.fromisoformat(f.read())
 
 
 @bot.event
@@ -95,6 +102,7 @@ async def check_if_live(user_login):
     while True:
         try:
             jsonresp = await request(f'https://api.twitch.tv/helix/streams?user_login={user_login}', {"Client-ID": clientID})
+            # Change presence when live
             live = jsonresp['data'] != []
             if live:
                 title = jsonresp['data'][0]['title']
@@ -104,6 +112,24 @@ async def check_if_live(user_login):
             else:
                 activity = None
             await bot.change_presence(activity=activity)
+            Ping stream announce role
+            if live:
+                stream_start = pyrfc3339.parse(jsonresp['data'][0]['started_at'])
+                global last_ping
+                if last_ping < stream_start:
+                    with open('last_ping.txt', 'w') as f:
+                        f.write(str(stream_start))
+                    last_ping = stream_start
+
+                    # Do the ping
+                    for guild in bot.guilds:
+                        try:
+                            pingrole = [role for role in guild.roles if role.name == 'Stream Ping'][0]
+                            await pingrole.edit(mentionable=True)
+                            await guild.system_channel.send(f':red_circle: Stream is live! https://www.twitch.tv/{user_login} {pingrole.mention}')
+                            await pingrole.edit(mentionable=False)
+                        except (IndexError, AttributeError):
+                            continue
         # This catches timeouts when I run this on my shitty internet
         except aiohttp.client_exceptions.ClientConnectorError:
             pass
@@ -171,6 +197,18 @@ async def error_handler(error=None, ctx=None, message=None):
 
 # Commands
 bmapidtojsoncache = {}
+
+
+@bot.command()
+@send_typing
+async def streamping(ctx):
+    pingrole = [role for role in ctx.guild.roles if role.name == 'Stream Ping'][0]
+    if pingrole in ctx.author.roles:
+        await ctx.author.remove_roles(pingrole)
+        await ctx.send(f'{ctx.author.mention}, Removed your `Stream Ping` role successfully.')
+    else:
+        await ctx.author.add_roles(pingrole)
+        await ctx.send(f'{ctx.author.mention}, Gave you the `Stream Ping` role successfully.')
 
 
 @bot.command()
