@@ -35,7 +35,8 @@ Todo:
       Maybe allow for reporting a reason
     ✔ Allow matches to be reported before the mp has closed @done(20-02-09 03:49)
     ☐ Allow for proper parsing of lobbies that continued past the match was over. For showmatches of other maps in the pool for exmaple
-    ☐ Allow for bot interactions from the #referee channel instead of the public #results channel
+    ✔ Allow for bot interactions from the #referee channel instead of the public #results channel @done(20-02-23 03:48)
+      Added special case to allow for match reporting from #referee. No other changes
     Refactor:
       ✔ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18) @done(19-09-04 22:23) @lasted(2w2d3h5m42s)
         Had to compromise and change result command to be invoked with !format

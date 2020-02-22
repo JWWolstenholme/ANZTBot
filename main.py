@@ -80,7 +80,7 @@ async def on_ready():
 async def on_message(message):
     if message.author == bot.user:
         return
-    if message.channel.name == 'results':
+    if message.channel.name in ['results', 'referee']:
         if re.match(match_id_format, message.content):
             await format(message)
     await bot.process_commands(message)
@@ -400,7 +400,12 @@ async def format(message):
                                 value=f'[{bmapFormatted}](https://osu.ppy.sh/b/{bmapID})\n'
                                 f'__{winner} ({int(scores[0]["score"]):,})__ wins by **({int(scores[0]["score"])-int(scores[1]["score"]):,})**', inline=False)
 
-        await message.channel.send(embed=embed)
+        # Try to find result channel for this server
+        resultchanels = [c for c in message.guild.channels if c.name == 'results']
+        try:
+            await resultchanels[0].send(embed=embed)
+        except IndexError:
+            await message.channel.send('Couldn\'t find a channel named `results` in this server to post result to')
 
 
 # Utility methods
