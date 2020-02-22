@@ -49,8 +49,12 @@ def to_ban(ban: str) -> str:
 def send_typing(f):
     @wraps(f)
     async def wrapped(*args):
-        async with args[0].typing():
-            return await f(*args)
+        if args[0].__class__ == discord.ext.commands.Context:
+            async with args[0].typing():
+                return await f(*args)
+        elif args[0].__class__ == discord.Message:
+            async with args[0].channel.typing():
+                return await f(*args)
     return wrapped
 
 
