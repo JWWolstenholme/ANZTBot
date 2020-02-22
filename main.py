@@ -112,7 +112,7 @@ async def check_if_live(user_login):
             else:
                 activity = None
             await bot.change_presence(activity=activity)
-            Ping stream announce role
+            # Ping stream announce role
             if live:
                 stream_start = pyrfc3339.parse(jsonresp['data'][0]['started_at'])
                 global last_ping
