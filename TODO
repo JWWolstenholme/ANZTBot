@@ -18,7 +18,7 @@ Todo:
     ✔ The bot doesn't show any picks for match results @done(20-02-08 05:38)
       This was due to teething issues regarding now having lobbies to test on. It was mostly caused by not converting strings from the api to ints
     ✔ The bot will show a tiebreaker map as if it was picked by the next player @done(20-02-09 04:02)
-    ☐ The bot interprets every message starting with it's prefix as a command and throws an error if the command doesn't exist
+    ✔ The bot interprets every message starting with it's prefix as a command and throws an error if the command doesn't exist @done(20-02-23 02:41)
   Improvements:
     ✔ Improve handling of empty cells in mappool picking spreadsheet @done(20-01-25 01:31)
       Fixed when spreadsheet scraping was updated for ANZT7S

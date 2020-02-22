@@ -111,6 +111,9 @@ async def check_if_live(user_login):
 # Error handlers
 @bot.event
 async def on_command_error(ctx, error):
+    # Ignore commands that don't exist
+    if error.__class__ == discord.ext.commands.CommandNotFound:
+        return
     await error_handler(error, ctx)
 
 
