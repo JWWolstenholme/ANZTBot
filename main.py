@@ -85,6 +85,7 @@ async def on_ready():
     global last_ping
     with open('last_ping.txt', 'r') as f:
         last_ping = datetime.fromisoformat(f.read())
+    bot.remove_command('help')
 
 
 @bot.event
@@ -124,9 +125,14 @@ async def check_if_live(user_login):
                     # Do the ping
                     for guild in bot.guilds:
                         try:
+                            embed = discord.Embed(title=f'**https://www.twitch.tv/{user_login}**', description=title, color=0x9146ff)
+                            embed.set_author(name=f'{user_login} is live!',
+                                             url=f'https://www.twitch.tv/{user_login}', icon_url='https://www.iconsdb.com/icons/preview/red/circle-xxl.png')
+                            embed.set_thumbnail(url='https://i.imgur.com/XbO4hoK.png')
+
                             pingrole = [role for role in guild.roles if role.name == 'Stream Ping'][0]
                             await pingrole.edit(mentionable=True)
-                            await guild.system_channel.send(f':red_circle: Stream is live! https://www.twitch.tv/{user_login} {pingrole.mention}')
+                            await guild.system_channel.send(f'{pingrole.mention}', embed=embed)
                             await pingrole.edit(mentionable=False)
                         except (IndexError, AttributeError):
                             continue
@@ -200,6 +206,7 @@ bmapidtojsoncache = {}
 
 
 @bot.command()
+@is_channel('bot')
 @send_typing
 async def streamping(ctx):
     pingrole = [role for role in ctx.guild.roles if role.name == 'Stream Ping'][0]
