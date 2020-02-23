@@ -443,14 +443,18 @@ async def format(message):
                                 f'__{winner} ({int(scores[0]["score"]):,})__ wins by **({int(scores[0]["score"])-int(scores[1]["score"]):,})**', inline=False)
 
         # Try to find result channel for this server
-        resultchanels = [c for c in message.guild.channels if c.name == 'results']
-        for channel in resultchanels:
+        resultchannels = [c for c in message.guild.channels if c.name == 'results']
+        if len(resultchannels) < 1:
+            await message.channel.send(f'{message.author.mention} Couldn\'t find a channel named `results` in this server to post result to', delete_after=10)
+            return
+        for channel in resultchannels:
             try:
                 await channel.send(embed=embed)
+                return
             except Exception:
                 continue
         else:
-            await message.channel.send('Couldn\'t find a channel named `results` in this server to post result to', delete_after=10)
+            await message.channel.send(f'{message.author.mention} Couldn\'t post to the results channel for some reason. ping diony', delete_after=10)
 
 
 # Utility methods
