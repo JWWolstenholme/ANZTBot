@@ -444,10 +444,13 @@ async def format(message):
 
         # Try to find result channel for this server
         resultchanels = [c for c in message.guild.channels if c.name == 'results']
-        try:
-            await resultchanels[0].send(embed=embed)
-        except IndexError:
-            await message.channel.send('Couldn\'t find a channel named `results` in this server to post result to')
+        for channel in resultchanels:
+            try:
+                await channel.send(embed=embed)
+            except Exception:
+                continue
+        else:
+            await message.channel.send('Couldn\'t find a channel named `results` in this server to post result to', delete_after=10)
 
 
 # Utility methods
