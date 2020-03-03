@@ -26,7 +26,8 @@ infeng = inflect.engine()
 # Regex
 osu_mp_url = re.compile(r'((https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/))(?P<id>[0-9]+)')
 ban_format = re.compile(r'(nm|hd|hr|dt|fm)[0-9]', re.IGNORECASE)
-match_id_format = re.compile(r'^([A-D]|[a-d])[0-9]+$')
+# match_id_format = re.compile(r'^([A-D]|[a-d])[0-9]+$')
+match_id_format = re.compile(r'^[0-9]+$')
 
 # Caches
 userIDs_to_usernames = {}
