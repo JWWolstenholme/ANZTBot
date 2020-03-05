@@ -344,7 +344,10 @@ async def format(message):
         # Get details for specified match from sheet
         match_id = message.content.upper()
         try:
-            cell = await ws.find(match_id)
+            finds = await ws.findall(match_id)
+            # limit findings to the column that holds ids
+            finds = [cell for cell in finds if cell.col == 1]
+            cell = finds[0]
         except CellNotFound:
             await message.channel.send(f'{message.author.mention} Couldn\'t find a match with ID: {match_id}', delete_after=10)
             return
