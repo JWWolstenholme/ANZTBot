@@ -385,10 +385,14 @@ async def format(message):
             p2['score'] = f'**{p2["score"]}** :trophy:'
 
         # Construct the embed
-        description = (f':flag_{country[p1["username"]]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
-                       f'Roll: {p1["roll"]} - Ban: {p1["ban"]}\n'
-                       f':flag_{country[p2["username"]]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
-                       f'Roll: {p2["roll"]} - Ban: {p2["ban"]}')
+        try:
+            description = (f':flag_{country[p1["username"]]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
+                           f'Roll: {p1["roll"]} - Ban: {p1["ban"]}\n'
+                           f':flag_{country[p2["username"]]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
+                           f'Roll: {p2["roll"]} - Ban: {p2["ban"]}')
+        except KeyError:
+            await message.channel.send(f'{message.author.mention} Failed to map username(s) `{p1["username"]}` and/or `{p2["username"]}` from the spreadsheet to known participants. This is usually caused by incorrect capitilisation on the spreadsheet or name changes.', delete_after=16)
+            return
         embed = discord.Embed(title=f'Match ID: {match_id}', description=description, color=0xe47607)
         embed.set_author(name=f'{tourneyRound}: ({p1["username"]}) vs ({p2["username"]})',
                          url=f'https://osu.ppy.sh/mp/{lobby_id}', icon_url='https://i.imgur.com/Y1zRCd8.png')
