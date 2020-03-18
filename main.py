@@ -4,7 +4,7 @@ import re
 import sys
 import traceback
 import typing
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from io import StringIO
 
@@ -17,6 +17,8 @@ import pytz
 from discord.ext import commands
 from gspread.exceptions import CellNotFound
 from oauth2client.service_account import ServiceAccountCredentials
+from pytz import timezone
+from tzlocal import get_localzone
 
 from settings import *
 
@@ -48,6 +50,12 @@ def to_ban(ban: str) -> str:
     if not re.match(ban_format, ban):
         raise SyntaxError("\"{}\" is not a valid ban".format(ban))
     return ban
+
+
+def to_id(id: str) -> str:
+    if re.match(match_id_format, id):
+        return id
+    raise SyntaxError(f"\"{id}\" is not a valid match id"())
 
 
 # Decorater methods
@@ -217,6 +225,52 @@ async def streamping(ctx):
     else:
         await ctx.author.add_roles(pingrole)
         await ctx.send(f'{ctx.author.mention}, Gave you the `Stream Ping` role successfully.')
+
+
+@bot.command()
+@is_channel('bot')
+@send_typing
+async def when(ctx, match_id: to_id):
+    # await ctx.message.delete()
+    # Get spreadsheet from google sheets
+    agc = await agcm.authorize()
+    sh = await agc.open('ANZT 7 Summer')
+    ws = await sh.worksheet(schedule_sheet_name)
+
+    # Get details for specified match from sheet
+    try:
+        finds = await ws.findall(match_id)
+        # limit findings to the column that holds ids
+        finds = [cell for cell in finds if cell.col == 1]
+        cell = finds[0]
+    except (CellNotFound, IndexError):
+        await ctx.send(f'{ctx.author.mention} Couldn\'t find a match with ID: {match_id}', delete_after=10)
+        return
+    row = await ws.row_values(cell.row)
+
+    austz = timezone('Australia/Melbourne')
+    schednaive = datetime.strptime(f'{datetime.now().year} {row[5]} {row[6]}', '%Y %A, %d %b %I:%M %p')
+    schedaware = austz.localize(schednaive)
+    nowaware = datetime.now(get_localzone())
+
+    nowausaware = nowaware.astimezone(austz)
+    dstchange = nowausaware.dst() != schedaware.dst()
+
+    tznotice = "UTC+11 / AEDT" if schedaware.dst() else "UTC+10 / AEST"
+    delta = strfdelta(schedaware-nowaware, '{days} days, {hours} hours, {minutes} minutes')
+    dststuff = "**Daylight savings ends between now and this match. Clocks should turn back an hour at 2am (AU) or 3am (NZ) on the 5th April.**" if dstchange else "There are no daylight savings changes before this match"
+    try:
+        p1flag = f':flag_{country[row[1]]}: '
+        p2flag = f' :flag_{country[row[4]]}:'
+    except KeyError:
+        pass
+    finally:
+        p1flag = f''
+        p2flag = f''
+    embed = discord.Embed(title=f'{p1flag}{row[1]} vs {row[4]}{p2flag}', colour=discord.Colour(0xaadb35),
+                          description=f'The sheet says **{row[5]}** at **{row[6]}** in **{tznotice}**\nThis occurs in `{delta}`\n{dststuff}')
+    embed.set_author(name=f'Match ID: {match_id}')
+    await ctx.send(embed=embed)
 
 
 @bot.command()
@@ -487,6 +541,15 @@ def get_creds():
     # Looks in the same directory as this script. Operating system and launch location independant.
     client_secret = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'client_secret.json')
     return ServiceAccountCredentials.from_json_keyfile_name(client_secret, scope)
+
+
+def strfdelta(tdelta, fmt):
+    """Used to convert timedelta objects into strings with a specified format.
+       See https://stackoverflow.com/a/8907269"""
+    d = {"days": tdelta.days}
+    d["hours"], rem = divmod(tdelta.seconds, 3600)
+    d["minutes"], d["seconds"] = divmod(rem, 60)
+    return fmt.format(**d)
 
 
 # Entry point

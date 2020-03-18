@@ -65,6 +65,7 @@ Todo:
     ☐ Allow for editing/reproccesing of previous match reports
     ☐ Implement a sort of ticket system for reschedules. Should makes it easier for organisers
       Could indicate that a ticket is open for a match on the sheets to indicate that that time is not final
+    ✔ !when command to help players identify when their match is regardless of timezone and considering daylight savings. @done(20-03-19 04:46)
     Big stuff for future tourneys:
       ☐ Predictions and associated rankings
       ☐ Automatic reffing
