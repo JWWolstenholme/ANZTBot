@@ -439,8 +439,8 @@ async def format(message):
         #     return
 
         # Gather info together from sheet
-        p1 = {'username': row[1], 'score': row[2], 'ban': row[7][1:4], 'roll': row[8]}
-        p2 = {'username': row[4], 'score': row[3], 'ban': row[9][1:4], 'roll': row[10]}
+        p1 = {'username': row[1], 'score': row[2], 'ban1': row[7][1:4], 'ban2': row[8][1:4], 'roll': row[9]}
+        p2 = {'username': row[4], 'score': row[3], 'ban1': row[9][1:4], 'ban2': row[10][1:4], 'roll': row[11]}
         if '' in p1.values() or '' in p2.values():
             await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
                                        f'or both players on the sheet for match: {match_id}', delete_after=10)
@@ -456,9 +456,9 @@ async def format(message):
         # Construct the embed
         try:
             description = (f':flag_{country[p1["username"]]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
-                           f'Roll: {p1["roll"]} - Ban: {p1["ban"]}\n'
+                           f'Roll: {p1["roll"]} - Bans: {p1["ban1"]}, {p1["ban2"]}\n'
                            f':flag_{country[p2["username"]]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
-                           f'Roll: {p2["roll"]} - Ban: {p2["ban"]}')
+                           f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}, {p2["ban2"]}')
         except KeyError:
             await message.channel.send(f'{message.author.mention} Failed to map username(s) `{p1["username"]}` and/or `{p2["username"]}` from the spreadsheet to known participants. This is usually caused by incorrect capitilisation on the spreadsheet or name changes.', delete_after=16)
             return
