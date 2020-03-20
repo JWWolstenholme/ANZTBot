@@ -440,7 +440,7 @@ async def format(message):
 
         # Gather info together from sheet
         p1 = {'username': row[1], 'score': row[2], 'ban1': row[7][1:4], 'ban2': row[8][1:4], 'roll': row[9]}
-        p2 = {'username': row[4], 'score': row[3], 'ban1': row[9][1:4], 'ban2': row[10][1:4], 'roll': row[11]}
+        p2 = {'username': row[4], 'score': row[3], 'ban1': row[10][1:4], 'ban2': row[11][1:4], 'roll': row[12]}
         if '' in p1.values() or '' in p2.values():
             await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
                                        f'or both players on the sheet for match: {match_id}', delete_after=10)
