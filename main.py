@@ -424,7 +424,7 @@ async def format(message):
 
         # Get lobby id from sheet
         try:
-            lobby_id = url_to_id(row[12])
+            lobby_id = url_to_id(row[14])
         except (SyntaxError, IndexError):
             await message.channel.send(f'{message.author.mention} Couldn\'t find a valid mp link on the sheet for match: {match_id}', delete_after=10)
             return
@@ -467,7 +467,7 @@ async def format(message):
                          url=f'https://osu.ppy.sh/mp/{lobby_id}', icon_url='https://i.imgur.com/Y1zRCd8.png')
         embed.set_thumbnail(url='https://i.imgur.com/Y1zRCd8.png')
         try:
-            referee = row[13]
+            referee = row[15]
             if referee == '':
                 raise IndexError()
             embed.set_footer(text=f'Refereed by {referee}')
@@ -475,7 +475,7 @@ async def format(message):
             embed.set_footer(text=f'Reported by {message.author.display_name}')
 
         # Construct the fields within the embed, displaying each pick and score differences
-        firstpick = row[11]
+        firstpick = row[13]
         if firstpick not in ['P1', 'P2']:
             await message.channel.send(f'{message.author.mention} Failed to find who picked first by looking at the'
                                        f'sheet for match: {match_id}', delete_after=10)
