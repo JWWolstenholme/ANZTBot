@@ -218,13 +218,28 @@ bmapidtojsoncache = {}
 @is_channel('bot')
 @send_typing
 async def streamping(ctx):
-    pingrole = [role for role in ctx.guild.roles if role.name == 'Stream Ping'][0]
+    rolename = 'Stream Ping'
+    pingrole = [role for role in ctx.guild.roles if role.name == rolename][0]
     if pingrole in ctx.author.roles:
         await ctx.author.remove_roles(pingrole)
-        await ctx.send(f'{ctx.author.mention}, Removed your `Stream Ping` role successfully.')
+        await ctx.send(f'{ctx.author.mention}, Removed your `{rolename}` role successfully.')
     else:
         await ctx.author.add_roles(pingrole)
-        await ctx.send(f'{ctx.author.mention}, Gave you the `Stream Ping` role successfully.')
+        await ctx.send(f'{ctx.author.mention}, Gave you the `{rolename}` role successfully.')
+
+
+@bot.command()
+@is_channel('bot')
+@send_typing
+async def pickemping(ctx):
+    rolename = 'Pickem Ping'
+    pingrole = [role for role in ctx.guild.roles if role.name == rolename][0]
+    if pingrole in ctx.author.roles:
+        await ctx.author.remove_roles(pingrole)
+        await ctx.send(f'{ctx.author.mention}, Removed your `{rolename}` role successfully.')
+    else:
+        await ctx.author.add_roles(pingrole)
+        await ctx.send(f'{ctx.author.mention}, Gave you the `{rolename}` role successfully.')
 
 
 @bot.command()
