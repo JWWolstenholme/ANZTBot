@@ -243,7 +243,7 @@ async def pickemping(ctx):
 
 
 @bot.command()
-@is_channel('bot')
+@is_channel('bot', 'scheduling')
 @send_typing
 async def when(ctx, match_id: to_id):
     # await ctx.message.delete()
