@@ -1,24 +1,5 @@
 // Created with Todo+ VSCode extension  
 Todo: 
-  Bugs:
-    ✔ "https://osu.ppy.sh/mp/54169084 HD2 HR2" and "https://osu.ppy.sh/mp/54169903 NM5 DT2 0" cause key errors @started(19-08-19 03:37) @done(19-08-19 04:22) @lasted(45m9s)
-      Caused by maps being aborted
-    ✔ "https://osu.ppy.sh/mp/53996635 DT1 HD2" @done(19-08-19 04:29)
-      Caused by maps being aborted
-    ✘ "https://osu.ppy.sh/mp/53996626 HD1 NM2" @started(19-08-19 04:30) @cancelled(19-08-19 04:42) @wasted(12m9s)
-      Caused by player dc, no changes made
-    ✔ "https://osu.ppy.sh/community/matches/53994610 HR2 HD2" @started(19-08-19 04:43) @done(19-08-19 04:53) @lasted(10m33s)
-      Caused by a bug in regex which where it only checked if an id was present for one type of possible url type
-    ✔ Spreadsheet scraping does not work on ANZT7S' new spreadsheet format @done(20-01-25 01:31)
-    ✔ The bot dies eventually after hours of running and requires restarting @done(20-01-31 23:19)
-      I beleive this was caused by the below error or something to do with error handling that has been fixed
-    ✔ The bot can not handle tracebacks greater than just under 2000 characters long @done(20-01-30 21:59)
-    ✔ The bot sometimes fails to connect to the twitch api @done(20-01-31 23:19)
-      This was caused by timeouts due to my bad internet so It just waits and tries again later now
-    ✔ The bot doesn't show any picks for match results @done(20-02-08 05:38)
-      This was due to teething issues regarding now having lobbies to test on. It was mostly caused by not converting strings from the api to ints
-    ✔ The bot will show a tiebreaker map as if it was picked by the next player @done(20-02-09 04:02)
-    ✔ The bot interprets every message starting with it's prefix as a command and throws an error if the command doesn't exist @done(20-02-23 02:41)
   Improvements:
     ✔ Improve handling of empty cells in mappool picking spreadsheet @done(20-01-25 01:31)
       Fixed when spreadsheet scraping was updated for ANZT7S
@@ -54,6 +35,9 @@ Todo:
       ✔ Allow referees to specify final score @done(19-09-04 22:24)
       ✔ Output match id when outputting match result @done(19-09-04 22:24)
   Features:
+    ☐ Sign up to receive a reminder about certain matches
+      Probably requires using a scheduling library and a database or something
+    ☐ Verification process (and role) requiring going through Osu! oauth procedure to confirm player's osu and discord accounts. Can nickname discord account to osu username.
     ✔ !picked command showing all picked maps @done(20-01-25 01:34)
     ☐ !pick command which adds the pick to the sheet
     ✔ Show status as streaming when osuanzt channel is live @done(20-01-25 18:05)
@@ -63,11 +47,30 @@ Todo:
     ☐ Integrate some features from https://github.com/LeaPhant/flowabot and find someway to credit it
     ✔ Add a stream ping role @done(20-02-23 08:09)
       Will require detecting if the stream is a different stream than the last time the bot checked and allow for users to add themselves to the role
-    ☐ Allow for editing/reproccesing of previous match reports
+    ☐ Allow for editing/reproccesing of previous match reports as opposed to having to delete and redo.
     ☐ Implement a sort of ticket system for reschedules. Should makes it easier for organisers
       Could indicate that a ticket is open for a match on the sheets to indicate that that time is not final
     ✔ !when command to help players identify when their match is regardless of timezone and considering daylight savings. @done(20-03-19 04:46)
     Big stuff for future tourneys:
-      ☐ Predictions and associated rankings
+      ☐ Predictions and associated rankings / Pickems
       ☐ Automatic reffing
         CeilingWaffle is working on something that might include this
+  Bugs:
+    ✔ "https://osu.ppy.sh/mp/54169084 HD2 HR2" and "https://osu.ppy.sh/mp/54169903 NM5 DT2 0" cause key errors @started(19-08-19 03:37) @done(19-08-19 04:22) @lasted(45m9s)
+      Caused by maps being aborted
+    ✔ "https://osu.ppy.sh/mp/53996635 DT1 HD2" @done(19-08-19 04:29)
+      Caused by maps being aborted
+    ✘ "https://osu.ppy.sh/mp/53996626 HD1 NM2" @started(19-08-19 04:30) @cancelled(19-08-19 04:42) @wasted(12m9s)
+      Caused by player dc, no changes made
+    ✔ "https://osu.ppy.sh/community/matches/53994610 HR2 HD2" @started(19-08-19 04:43) @done(19-08-19 04:53) @lasted(10m33s)
+      Caused by a bug in regex which where it only checked if an id was present for one type of possible url type
+    ✔ Spreadsheet scraping does not work on ANZT7S' new spreadsheet format @done(20-01-25 01:31)
+    ✔ The bot dies eventually after hours of running and requires restarting @done(20-01-31 23:19)
+      I beleive this was caused by the below error or something to do with error handling that has been fixed
+    ✔ The bot can not handle tracebacks greater than just under 2000 characters long @done(20-01-30 21:59)
+    ✔ The bot sometimes fails to connect to the twitch api @done(20-01-31 23:19)
+      This was caused by timeouts due to my bad internet so It just waits and tries again later now
+    ✔ The bot doesn't show any picks for match results @done(20-02-08 05:38)
+      This was due to teething issues regarding now having lobbies to test on. It was mostly caused by not converting strings from the api to ints
+    ✔ The bot will show a tiebreaker map as if it was picked by the next player @done(20-02-09 04:02)
+    ✔ The bot interprets every message starting with it's prefix as a command and throws an error if the command doesn't exist @done(20-02-23 02:41)
