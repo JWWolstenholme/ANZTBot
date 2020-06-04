@@ -35,6 +35,8 @@ Todo:
       ✔ Allow referees to specify final score @done(19-09-04 22:24)
       ✔ Output match id when outputting match result @done(19-09-04 22:24)
   Features:
+    ☐ Store tournament rules allowing for querying of rules and display all rules in a channel
+      Should also display revisions/clarifications to rules
     ☐ Sign up to receive a reminder about certain matches
       Probably requires using a scheduling library and a database or something
     ☐ Verification process (and role) requiring going through Osu! oauth procedure to confirm player's osu and discord accounts. Can nickname discord account to osu username.
@@ -56,6 +58,7 @@ Todo:
       ☐ Automatic reffing
         CeilingWaffle is working on something that might include this
   Bugs:
+    ☐ Twitch updated their api authentication to oauth
     ✔ "https://osu.ppy.sh/mp/54169084 HD2 HR2" and "https://osu.ppy.sh/mp/54169903 NM5 DT2 0" cause key errors @started(19-08-19 03:37) @done(19-08-19 04:22) @lasted(45m9s)
       Caused by maps being aborted
     ✔ "https://osu.ppy.sh/mp/53996635 DT1 HD2" @done(19-08-19 04:29)
