@@ -90,7 +90,7 @@ def is_webhook(message):
 @bot.event
 async def on_ready():
     print('Logged in as ' + bot.user.name)
-    bot.loop.create_task(check_if_live(twitchannel))
+    # bot.loop.create_task(check_if_live(twitchannel))
     global last_ping
     with open('last_ping.txt', 'r') as f:
         last_ping = datetime.fromisoformat(f.read())
