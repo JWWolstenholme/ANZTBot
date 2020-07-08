@@ -4,17 +4,19 @@ import re
 import sys
 import traceback
 import typing
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from functools import wraps
 from io import StringIO
 
 import aiohttp
+import asyncpg
 import discord
 import gspread_asyncio
 import inflect
 import pyrfc3339
 import pytz
 from discord.ext import commands
+from discord.ext.commands.cooldowns import BucketType
 from gspread.exceptions import CellNotFound
 from oauth2client.service_account import ServiceAccountCredentials
 from pytz import timezone
@@ -36,6 +38,9 @@ userIDs_to_usernames = {}
 bmapIDs_to_json = {}
 last_ping = None
 
+# Postgres connection pool
+connpool = bot.loop.run_until_complete(asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport))
+
 
 # Converter methods
 def url_to_id(url: str) -> int:
@@ -55,7 +60,7 @@ def to_ban(ban: str) -> str:
 def to_id(id: str) -> str:
     if re.match(match_id_format, id):
         return id
-    raise SyntaxError(f"\"{id}\" is not a valid match id"())
+    raise SyntaxError(f"\"{id}\" is not a valid match id")
 
 
 # Decorater methods
@@ -86,6 +91,20 @@ def is_webhook(message):
     return message.webhook_id is not None
 
 
+def is_staff():
+    async def predicate(ctx):
+        discord_id = ctx.author.id
+        async with connpool.acquire() as conn:
+            async with conn.transaction():
+                staff = await conn.fetchrow('''SELECT * FROM staff where staff_discord_id=$1''', discord_id)
+                if staff is None:
+                    await ctx.message.delete()
+                    await ctx.send(f'{ctx.author.mention} You need to be staff to use that command', delete_after=10)
+                    return False
+                return True
+    return commands.check(predicate)
+
+
 # Event listeners
 @bot.event
 async def on_ready():
@@ -104,6 +123,12 @@ async def on_message(message):
     if message.channel.name in ['results', 'referee']:
         if re.match(match_id_format, message.content):
             await format(message)
+    # Don't allow messages in #qualifiers that aren't commands
+    if message.channel.name in ['qualifiers']:
+        context = await bot.get_context(message)
+        if not context.valid:
+            await message.delete()
+            await message.channel.send(f'{message.author.mention} please only use commands like `!lobby #` here', delete_after=5)
     await bot.process_commands(message)
 
 
@@ -159,6 +184,15 @@ async def on_command_error(ctx, error):
     # Ignore commands that don't exist
     if error.__class__ == discord.ext.commands.CommandNotFound:
         return
+    if error.__class__ == discord.ext.commands.CommandOnCooldown:
+        await ctx.message.delete()
+        await ctx.send(f'{ctx.author.mention} That command is on cooldown. Try again in {error.retry_after:.2f}s', delete_after=7)
+        return
+    if error.__class__ == discord.ext.commands.CheckFailure:
+        return
+    if error.__class__ == discord.ext.commands.BadArgument:
+        await ctx.message.delete()
+        await ctx.send(f'{ctx.author.mention} There was something wrong with your command arguments', delete_after=7)
     await error_handler(error, ctx)
 
 
@@ -215,6 +249,178 @@ bmapidtojsoncache = {}
 
 
 @bot.command()
+@is_channel('qualifiers')
+@send_typing
+@commands.cooldown(1, 6, BucketType.channel)
+async def lobby(ctx, lobby_id: int):
+    await ctx.message.delete()
+    id = ctx.author.id
+    async with connpool.acquire() as conn:
+        async with conn.transaction():
+            player = await conn.fetchrow('''SELECT * FROM players where discord_id=$1''', id)
+            if player is None:
+                await ctx.send(f'{ctx.author.mention} You don\'t appear to be registered for this tourney', delete_after=10)
+                return
+            lobby = await conn.fetchrow('''SELECT * FROM lobbies where lobby_id=$1''', lobby_id)
+            if lobby is None:
+                await ctx.send(f'{ctx.author.mention} I can\'t find a lobby with id {lobby_id}', delete_after=10)
+                return
+            lobby_signup = await conn.fetchrow('''SELECT * FROM lobby_signups where osu_id=$1''', player['osu_id'])
+
+            try:
+                # Signing up to a new lobby
+                if lobby_signup is None:
+                    await conn.execute('''insert into lobby_signups values ($1, $2)''', player['osu_id'], lobby_id)
+                    await ctx.send(f'{ctx.author.mention} Added you to lobby {lobby_id}', delete_after=10)
+                # Removing themselves from the lobby they are in
+                elif lobby_signup['lobby_id'] == lobby_id:
+                    await conn.execute('''delete from lobby_signups where osu_id=$1''', player['osu_id'])
+                    await ctx.send(f'{ctx.author.mention} Removed you from lobby {lobby_id}', delete_after=10)
+                # Switching lobbies
+                else:
+                    await conn.execute('''update lobby_signups set lobby_id=$1 where osu_id=$2''', lobby_id, player['osu_id'])
+                    await ctx.send(f'{ctx.author.mention} Switched you to lobby {lobby_id}', delete_after=10)
+            except asyncpg.exceptions.RaiseError:
+                await ctx.send(f'{ctx.author.mention} Lobby {lobby_id} is full', delete_after=10)
+    await update_lobbies(ctx)
+
+
+@bot.command()
+@is_channel('qualifiers')
+@is_staff()
+@send_typing
+async def placeholders(ctx):
+    await ctx.message.delete()
+    # remove previous messages
+    async with connpool.acquire() as conn:
+        async with conn.transaction():
+            messages = await conn.fetch('''select message_id from persistent_messages''')
+            for message in messages:
+                try:
+                    i = await ctx.channel.fetch_message(message['message_id'])
+                    await i.delete()
+                except discord.NotFound:
+                    pass
+            await conn.execute('''delete from persistent_messages''')
+
+    dates = [date(2020, 7, 10), date(2020, 7, 11), date(2020, 7, 12)]
+    thumbnail_urls = ['https://i.imgur.com/Of7Z8pD.png', 'https://i.imgur.com/7Gochmd.png', 'https://i.imgur.com/EzpZz0k.png']
+    ids = []
+    # send the placeholder messages
+    for _ in dates:
+        message = await ctx.send(embed=discord.Embed(description='placeholder'))
+        ids.append(message.id)
+    message = await ctx.send(embed=discord.Embed(description='Use `!lobby #` to sign up for, switch to or leave a lobby.\nAll times are in AEST (UTC+10) | @Diony in another channel for bot problems'))
+    ids.append(message.id)
+    # store the placeholder messages
+    async with connpool.acquire() as conn:
+        async with conn.transaction():
+            await conn.executemany('''insert into persistent_messages values ($1, $2, $3)''', list(zip(ids, dates, thumbnail_urls)))
+            await conn.execute('''insert into persistent_messages (message_id) values ($1)''', ids[-1])
+
+
+@bot.command()
+@is_channel('qualifiers')
+@send_typing
+@commands.cooldown(1, 20, BucketType.channel)
+async def refresh(ctx):
+    await ctx.message.delete()
+    await update_lobbies(ctx)
+
+
+@bot.command(aliases=['ref', 'referee'])
+@is_channel('qualifiers')
+@is_staff()
+@send_typing
+@commands.cooldown(1, 6, BucketType.channel)
+async def reff(ctx, lobby_id: int):
+    await ctx.message.delete()
+    id = ctx.author.id
+    async with connpool.acquire() as conn:
+        async with conn.transaction():
+            staff = await conn.fetchrow('''SELECT * FROM staff where staff_discord_id=$1''', id)
+            lobby = await conn.fetchrow('''SELECT * FROM lobbies where lobby_id=$1''', lobby_id)
+            if lobby is None:
+                await ctx.send(f'{ctx.author.mention} I can\'t find a lobby with id {lobby_id}', delete_after=10)
+                return
+
+            # removing themselves as reff
+            if lobby['staff_osu_id'] == staff['staff_osu_id']:
+                await conn.execute('''update lobbies set staff_osu_id=NULL where lobby_id=$1''', lobby_id)
+                await ctx.send(f'{ctx.author.mention} Removed you as reff for lobby {lobby_id}', delete_after=10)
+            # Switching reff
+            else:
+                await conn.execute('''update lobbies set staff_osu_id=$1 where lobby_id=$2''', staff['staff_osu_id'], lobby_id)
+                await ctx.send(f'{ctx.author.mention} Added/replaced you as reff for lobby {lobby_id}', delete_after=10)
+    await update_lobbies(ctx)
+
+
+async def update_lobbies(ctx):
+    async with connpool.acquire() as conn:
+        async with conn.transaction():
+            messages = await conn.fetch('''select * from persistent_messages;''')
+            lobbies = await conn.fetch('''select * from lobbies;''')
+            signups = await conn.fetch('''select osu_username, lobby_id from players natural join lobby_signups;''')
+            staff = await conn.fetch('''select * from staff''')
+    # message records that have a day associated will contain information about lobbies on that day.
+    messages = [message for message in messages if message['day'] is not None]
+    messages.sort(key=lambda x: x['day'])
+    for i in messages:
+        message = await ctx.channel.fetch_message(i['message_id'])
+        lobbies_for_message = [record for record in lobbies if record['time'].date() == i['day']]
+        lobbies_for_message.sort(key=lambda x: x['time'])
+
+        embed = discord.Embed(color=discord.Colour(0x6e95fc))
+        embed.set_thumbnail(url=i['thumbnail_url'])
+        for lobby in lobbies_for_message:
+            players = [record['osu_username'] for record in signups if record['lobby_id'] == lobby['lobby_id']]
+            time = lobby['time']
+            # datetime didn't have an easy way to get lowercase am/pm so I just did it manually
+            timestring = f'{time.hour%12}:{str(time.minute).zfill(2)}{"am" if time.hour < 12 else "pm"}'
+            # uses discord emotes to represent time with an analog clock emote
+            name = f':clock{time.hour%12}: {timestring}'
+            # either contains the reffs osu name or None if lobby has no reff
+            referee_name = [record['staff_osu_username'] for record in staff if record['staff_osu_id'] == lobby['staff_osu_id']]
+
+            free_spots = 16 - len(players)
+            if free_spots == 0:
+                emote = ':red_circle:'
+            elif free_spots == 16:
+                emote = ':orange_circle:'
+            else:
+                emote = ':green_circle:'
+            playerstring = '    '.join(players) if len(players) > 0 else '-'
+            reff = f' | Reffed by {referee_name[0]}' if referee_name else ''
+            value = f'{emote} **ID: {lobby["lobby_id"]}** | {free_spots} free spots{reff}```{playerstring}```'
+            embed.add_field(name=name, inline=False, value=value)
+        await message.edit(content='', embed=embed)
+
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+@send_typing
+async def pingunsigned(ctx):
+    # Get everything after the command
+    content = ctx.message.content.lstrip(ctx.prefix + ctx.invoked_with + ' ')
+    await ctx.message.delete()
+    if content.strip() == '':
+        await ctx.send('Add what you want to say to the pingees after the command', delete_after=6)
+        return
+    async with connpool.acquire() as conn:
+        async with conn.transaction():
+            nonsigned_discord_ids = await conn.fetch('''select discord_id from players natural join (select osu_id from players except select osu_id from lobby_signups) as i;''')
+    nonsigned_discord_ids = [record['discord_id'] for record in nonsigned_discord_ids]
+    nonsigned_users = [bot.get_user(id) for id in nonsigned_discord_ids]
+    if None in nonsigned_users:
+        await ctx.send('Failed to find at least one of the pingees by discord id.', delete_after=7)
+        return
+    confirmed = await confirm(ctx, f'This will append your message (minus the command) with the pings of {len(nonsigned_users)} people. React with the tick to confirm within {20} seconds.')
+    if confirmed:
+        pings = ' '.join([user.mention for user in nonsigned_users])
+        await ctx.send(f'{content}\n{pings}')
+
+
+@bot.command()
 @is_channel('bot')
 @send_typing
 async def streamping(ctx):
@@ -249,7 +455,7 @@ async def when(ctx, match_id: to_id):
     # await ctx.message.delete()
     # Get spreadsheet from google sheets
     agc = await agcm.authorize()
-    sh = await agc.open('ANZT 7 Summer')
+    sh = await agc.open(sheet_file_name)
     ws = await sh.worksheet(schedule_sheet_name)
 
     # Get details for specified match from sheet
@@ -407,7 +613,7 @@ async def format(message):
         await message.delete()
         # Get spreadsheet from google sheets
         agc = await agcm.authorize()
-        sh = await agc.open('ANZT 7 Summer')
+        sh = await agc.open(sheet_file_name)
         ws = await sh.worksheet(schedule_sheet_name)
 
         # Get details for specified match from sheet
@@ -542,6 +748,24 @@ async def format(message):
 
 
 # Utility methods
+async def confirm(ctx, prompt, timeout=20.0):
+    message = await ctx.send(prompt)
+    await message.add_reaction('✅')
+    await message.add_reaction('❌')
+
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) in ['✅', '❌']
+
+    try:
+        reaction, user = await bot.wait_for('reaction_add', timeout=timeout, check=check)
+    except asyncio.TimeoutError:
+        await message.delete()
+        return False
+    else:
+        await message.delete()
+        return str(reaction.emoji) == '✅'
+
+
 async def request(url: str, headers: dict = {}) -> dict:
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as r:
