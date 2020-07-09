@@ -193,6 +193,7 @@ async def on_command_error(ctx, error):
     if error.__class__ == discord.ext.commands.BadArgument:
         await ctx.message.delete()
         await ctx.send(f'{ctx.author.mention} There was something wrong with your command arguments', delete_after=7)
+        return
     await error_handler(error, ctx)
 
 
@@ -310,7 +311,7 @@ async def placeholders(ctx):
     for _ in dates:
         message = await ctx.send(embed=discord.Embed(description='placeholder'))
         ids.append(message.id)
-    message = await ctx.send(embed=discord.Embed(description='Use `!lobby #` to sign up for, switch to or leave a lobby.\nAll times are in AEST (UTC+10) | @Diony in another channel for bot problems'))
+    message = await ctx.send(embed=discord.Embed(description='Use `!lobby #` to sign up for, switch to or leave a lobby E.g. !lobby 5\nAll times are in AEST (UTC+10) | @Diony in another channel for bot problems'))
     ids.append(message.id)
     # store the placeholder messages
     async with connpool.acquire() as conn:
