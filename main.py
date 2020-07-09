@@ -422,6 +422,19 @@ async def pingunsigned(ctx):
 
 
 @bot.command()
+@is_staff()
+@send_typing
+async def unsigned(ctx):
+    await ctx.message.delete()
+    async with connpool.acquire() as conn:
+        async with conn.transaction():
+            nonsigned_records = await conn.fetch('''select osu_username from players natural join (select osu_id from players except select osu_id from lobby_signups) as i;''')
+    nonsigned_osu_usernames = [record['osu_username'] for record in nonsigned_records]
+    user_list = '    '.join(nonsigned_osu_usernames) if len(nonsigned_osu_usernames) > 0 else '-'
+    await ctx.send(f'{len(nonsigned_osu_usernames)} players have not yet signed up. ```{user_list}```')
+
+
+@bot.command()
 @is_channel('bot')
 @send_typing
 async def streamping(ctx):
