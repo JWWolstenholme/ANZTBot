@@ -194,6 +194,10 @@ async def on_command_error(ctx, error):
         await ctx.message.delete()
         await ctx.send(f'{ctx.author.mention} There was something wrong with your command arguments', delete_after=7)
         return
+    if error.__class__ == discord.ext.commands.MissingRequiredArgument:
+        await ctx.message.delete()
+        await ctx.send(f'{ctx.author.mention} You\'re missing at least one argument', delete_after=7)
+        return
     await error_handler(error, ctx)
 
 
