@@ -123,12 +123,14 @@ async def on_message(message):
     if message.channel.name in ['results', 'referee']:
         if re.match(match_id_format, message.content):
             await format(message)
+    context = await bot.get_context(message)
+    # log successful commands
+    if context.valid:
+        await log(context)
     # Don't allow messages in #qualifiers that aren't commands
-    if message.channel.name in ['qualifiers']:
-        context = await bot.get_context(message)
-        if not context.valid:
-            await message.delete()
-            await message.channel.send(f'{message.author.mention} please only use commands like `!lobby #` here', delete_after=5)
+    elif not context.valid and message.channel.name == 'qualifiers':
+        await message.delete()
+        await message.channel.send(f'{message.author.mention} please only use commands like `!lobby #` here', delete_after=5)
     await bot.process_commands(message)
 
 
@@ -803,6 +805,19 @@ async def format(message):
 
 
 # Utility methods
+async def log(ctx):
+    author = ctx.author
+    embed = discord.Embed(description=f"`{author.name + '#' + author.discriminator}` said `{ctx.message.content}` in `#{ctx.channel}`")
+    embed.set_author(name=f"{ctx.prefix + ctx.invoked_with} used", icon_url=str(author.avatar_url))
+    embed.add_field(name="Discord id", value=f"`{author.id}`")
+    embed.add_field(name="Display name", value=f"`{author.display_name}`")
+
+    anztguild = bot.get_guild(199158455888642048)
+    logchannel = anztguild.get_channel(731069297295753318)
+
+    await logchannel.send(embed=embed)
+
+
 async def confirm(ctx, prompt, timeout=20.0):
     message = await ctx.send(prompt)
     await message.add_reaction('✅')
