@@ -292,7 +292,7 @@ async def lobby(ctx, lobby_id: int):
 
 @bot.command()
 @is_channel('qualifiers')
-@is_staff()
+@commands.has_permissions(administrator=True)
 @send_typing
 @commands.cooldown(1, 6, BucketType.channel)
 async def signup(ctx, osu_username: str, lobby_id: int):
