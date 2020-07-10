@@ -262,15 +262,15 @@ async def lobby(ctx, lobby_id: int):
     id = ctx.author.id
     async with connpool.acquire() as conn:
         async with conn.transaction():
-            player = await conn.fetchrow('''SELECT * FROM players where discord_id=$1''', id)
+            player = await conn.fetchrow('''select * from players where discord_id=$1''', id)
             if player is None:
                 await ctx.send(f'{ctx.author.mention} You don\'t appear to be registered for this tourney', delete_after=10)
                 return
-            lobby = await conn.fetchrow('''SELECT * FROM lobbies where lobby_id=$1''', lobby_id)
+            lobby = await conn.fetchrow('''select * from lobbies where lobby_id=$1''', lobby_id)
             if lobby is None:
                 await ctx.send(f'{ctx.author.mention} I can\'t find a lobby with id {lobby_id}', delete_after=10)
                 return
-            lobby_signup = await conn.fetchrow('''SELECT * FROM lobby_signups where osu_id=$1''', player['osu_id'])
+            lobby_signup = await conn.fetchrow('''select * from lobby_signups where osu_id=$1''', player['osu_id'])
 
             try:
                 # Signing up to a new lobby
@@ -285,6 +285,43 @@ async def lobby(ctx, lobby_id: int):
                 else:
                     await conn.execute('''update lobby_signups set lobby_id=$1 where osu_id=$2''', lobby_id, player['osu_id'])
                     await ctx.send(f'{ctx.author.mention} Switched you to lobby {lobby_id}', delete_after=10)
+            except asyncpg.exceptions.RaiseError:
+                await ctx.send(f'{ctx.author.mention} Lobby {lobby_id} is full', delete_after=10)
+    await update_lobbies(ctx)
+
+
+@bot.command()
+@is_channel('qualifiers')
+@is_staff()
+@send_typing
+@commands.cooldown(1, 6, BucketType.channel)
+async def signup(ctx, osu_username: str, lobby_id: int):
+    await ctx.message.delete()
+    async with connpool.acquire() as conn:
+        async with conn.transaction():
+            player = await conn.fetchrow('''select * from players where osu_username ilike $1''', osu_username)
+            if player is None:
+                await ctx.send(f'{ctx.author.mention} Couldn\'t find a user named {osu_username}', delete_after=10)
+                return
+            lobby = await conn.fetchrow('''select * from lobbies where lobby_id=$1''', lobby_id)
+            if lobby is None:
+                await ctx.send(f'{ctx.author.mention} I can\'t find a lobby with id {lobby_id}', delete_after=10)
+                return
+            lobby_signup = await conn.fetchrow('''select * from lobby_signups where osu_id=$1''', player['osu_id'])
+
+            try:
+                # Signing up to a new lobby
+                if lobby_signup is None:
+                    await conn.execute('''insert into lobby_signups values ($1, $2)''', player['osu_id'], lobby_id)
+                    await ctx.send(f'{ctx.author.mention} Added {osu_username} to lobby {lobby_id}', delete_after=10)
+                # Removing them from the lobby they are in
+                elif lobby_signup['lobby_id'] == lobby_id:
+                    await conn.execute('''delete from lobby_signups where osu_id=$1''', player['osu_id'])
+                    await ctx.send(f'{ctx.author.mention} Removed {osu_username} from lobby {lobby_id}', delete_after=10)
+                # Switching lobbies
+                else:
+                    await conn.execute('''update lobby_signups set lobby_id=$1 where osu_id=$2''', lobby_id, player['osu_id'])
+                    await ctx.send(f'{ctx.author.mention} Switched {osu_username} to lobby {lobby_id}', delete_after=10)
             except asyncpg.exceptions.RaiseError:
                 await ctx.send(f'{ctx.author.mention} Lobby {lobby_id} is full', delete_after=10)
     await update_lobbies(ctx)
