@@ -120,11 +120,11 @@ async def on_ready():
 async def on_message(message):
     if message.author == bot.user:
         return
-    if message.channel.name in ['results', 'referee']:
+    if message.channel.name in ['match-results', 'referee']:
         if re.match(match_id_format, message.content):
             await format(message)
     context = await bot.get_context(message)
-    # log successful commands
+    # log commands
     if context.valid:
         await log(context)
     # Don't allow messages in #qualifiers that aren't commands
@@ -485,10 +485,10 @@ async def streamping(ctx):
     pingrole = [role for role in ctx.guild.roles if role.name == rolename][0]
     if pingrole in ctx.author.roles:
         await ctx.author.remove_roles(pingrole)
-        await ctx.send(f'{ctx.author.mention}, Removed your `{rolename}` role successfully.')
+        await ctx.send(f'{ctx.author.mention}, Removed your `{rolename}` role.')
     else:
         await ctx.author.add_roles(pingrole)
-        await ctx.send(f'{ctx.author.mention}, Gave you the `{rolename}` role successfully.')
+        await ctx.send(f'{ctx.author.mention}, Gave you the `{rolename}` role.')
 
 
 @bot.command()
@@ -499,10 +499,10 @@ async def pickemping(ctx):
     pingrole = [role for role in ctx.guild.roles if role.name == rolename][0]
     if pingrole in ctx.author.roles:
         await ctx.author.remove_roles(pingrole)
-        await ctx.send(f'{ctx.author.mention}, Removed your `{rolename}` role successfully.')
+        await ctx.send(f'{ctx.author.mention}, Removed your `{rolename}` role.')
     else:
         await ctx.author.add_roles(pingrole)
-        await ctx.send(f'{ctx.author.mention}, Gave you the `{rolename}` role successfully.')
+        await ctx.send(f'{ctx.author.mention}, Gave you the `{rolename}` role.')
 
 
 @bot.command()
@@ -513,7 +513,7 @@ async def when(ctx, match_id: to_id):
     # Get spreadsheet from google sheets
     agc = await agcm.authorize()
     sh = await agc.open(sheet_file_name)
-    ws = await sh.worksheet(schedule_sheet_name)
+    ws = await sh.worksheet('Schedule')
 
     # Get details for specified match from sheet
     try:
@@ -572,7 +572,7 @@ async def webhookpurge(ctx, limit: int):
 
 
 @bot.command(name='del', aliases=['delete', 'undo'])
-@is_channel('results', 'mappool')
+@is_channel('match-results', 'mappool')
 async def delete(ctx):
     await ctx.message.delete()
     async for message in ctx.history():
@@ -664,30 +664,21 @@ async def picked(ctx):
 
 async def format(message):
     """This method isn't a @bot.command() so that users do not need to use the command prefix in the one
-    channel this is used in. This method is called from on_message() when a match id is posted in #results.
+    channel this is used in. This method is called from on_message() when a match id is posted in #match-results.
     """
     async with message.channel.typing():
         await message.delete()
         # Get spreadsheet from google sheets
         agc = await agcm.authorize()
         sh = await agc.open(sheet_file_name)
-        ws = await sh.worksheet(schedule_sheet_name)
 
-        # Get details for specified match from sheet
         match_id = message.content.upper()
-        try:
-            finds = await ws.findall(match_id)
-            # limit findings to the column that holds ids
-            finds = [cell for cell in finds if cell.col == 1]
-            cell = finds[0]
-        except CellNotFound:
-            await message.channel.send(f'{message.author.mention} Couldn\'t find a match with ID: {match_id}', delete_after=10)
-            return
-        row = await ws.row_values(cell.row)
+        ws = await sh.worksheet(match_id)
 
         # Get lobby id from sheet
         try:
-            lobby_id = url_to_id(row[14])
+            urlcell = await ws.acell('C4')
+            lobby_id = url_to_id(urlcell.value)
         except (SyntaxError, IndexError):
             await message.channel.send(f'{message.author.mention} Couldn\'t find a valid mp link on the sheet for match: {match_id}', delete_after=10)
             return
@@ -701,9 +692,11 @@ async def format(message):
         #     await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) looks to be incomplete. Use !mp close', delete_after=10)
         #     return
 
+        batch = (await ws.batch_get(['B2:L5']))[0]
         # Gather info together from sheet
-        p1 = {'username': row[1], 'score': row[2], 'ban1': row[7][1:4], 'ban2': row[8][1:4], 'roll': row[9]}
-        p2 = {'username': row[4], 'score': row[3], 'ban1': row[10][1:4], 'ban2': row[11][1:4], 'roll': row[12]}
+        # syntax is batch[row][col] relative to the range B2:L5
+        p1 = {'username': batch[0][4], 'score': batch[1][4], 'ban1': batch[1][9][0:3], 'roll': batch[2][4]}
+        p2 = {'username': batch[0][6], 'score': batch[1][6], 'ban1': batch[2][9][0:3], 'roll': batch[2][6]}
         if '' in p1.values() or '' in p2.values():
             await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
                                        f'or both players on the sheet for match: {match_id}', delete_after=10)
@@ -719,27 +712,26 @@ async def format(message):
         # Construct the embed
         try:
             description = (f':flag_{country[p1["username"]]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
-                           f'Roll: {p1["roll"]} - Bans: {p1["ban1"]}, {p1["ban2"]}\n'
+                           f'Roll: {p1["roll"]} - Ban: {p1["ban1"]}\n'
                            f':flag_{country[p2["username"]]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
-                           f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}, {p2["ban2"]}')
+                           f'Roll: {p2["roll"]} - Ban: {p2["ban1"]}')
         except KeyError:
             await message.channel.send(f'{message.author.mention} Failed to map username(s) `{p1["username"]}` and/or `{p2["username"]}` from the spreadsheet to known participants. This is usually caused by incorrect capitilisation on the spreadsheet or name changes.', delete_after=16)
             return
         embed = discord.Embed(title=f'Match ID: {match_id}', description=description, color=0xe47607)
         embed.set_author(name=f'{tourneyRound}: ({p1["username"]}) vs ({p2["username"]})',
-                         url=f'https://osu.ppy.sh/mp/{lobby_id}', icon_url='https://i.imgur.com/Y1zRCd8.png')
-        embed.set_thumbnail(url='https://i.imgur.com/Y1zRCd8.png')
-        try:
-            referee = row[15]
-            if referee == '':
-                raise IndexError()
-            embed.set_footer(text=f'Refereed by {referee}')
-        except IndexError:
-            embed.set_footer(text=f'Reported by {message.author.display_name}')
+                         url=f'https://osu.ppy.sh/mp/{lobby_id}', icon_url='https://i.imgur.com/QqvKqI8.png')
+        # try:
+        #     referee = row[15]
+        #     if referee == '':
+        #         raise IndexError()
+        #     embed.set_footer(text=f'Refereed by {referee}')
+        # except IndexError:
+        embed.set_footer(text=f'Reported by {message.author.display_name}')
 
         # Construct the fields within the embed, displaying each pick and score differences
-        firstpick = row[13]
-        if firstpick not in ['P1', 'P2']:
+        firstpick = batch[3][5]
+        if firstpick not in [p1['username'], p2['username']]:
             await message.channel.send(f'{message.author.mention} Failed to find who picked first by looking at the'
                                        f'sheet for match: {match_id}', delete_after=10)
             return
@@ -751,7 +743,7 @@ async def format(message):
         for i, game in enumerate(filteredgames):
             emote = orange if i % 2 == 0 else blue
             # Alternate players starting from whoever the sheet says had first pick
-            picker = p1['username'] if (i % 2 == 0 if firstpick == 'P1' else i % 2 != 0) else p2['username']
+            picker = p1['username'] if (i % 2 == 0 if firstpick == p1['username'] else i % 2 != 0) else p2['username']
             bmapID = int(game['beatmap_id'])
             # Retreive beatmap information from osu api or cache
             if bmapID not in bmapIDs_to_json.keys():
@@ -790,9 +782,9 @@ async def format(message):
                                 f'__{winner} ({int(scores[0]["score"]):,})__ wins by **({int(scores[0]["score"])-int(scores[1]["score"]):,})**', inline=False)
 
         # Try to find result channel for this server
-        resultchannels = [c for c in message.guild.channels if c.name == 'results']
+        resultchannels = [c for c in message.guild.channels if c.name == 'match-results']
         if len(resultchannels) < 1:
-            await message.channel.send(f'{message.author.mention} Couldn\'t find a channel named `results` in this server to post result to', delete_after=10)
+            await message.channel.send(f'{message.author.mention} Couldn\'t find a channel named `match-results` in this server to post result to', delete_after=10)
             return
         for channel in resultchannels:
             try:
@@ -813,9 +805,9 @@ async def log(ctx):
     embed.add_field(name="Display name", value=f"`{author.display_name}`")
 
     anztguild = bot.get_guild(199158455888642048)
-    logchannel = anztguild.get_channel(731069297295753318)
-
-    await logchannel.send(embed=embed)
+    if anztguild is not None:
+        logchannel = anztguild.get_channel(731069297295753318)
+        await logchannel.send(embed=embed)
 
 
 async def confirm(ctx, prompt, timeout=20.0):
