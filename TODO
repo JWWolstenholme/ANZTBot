@@ -1,6 +1,7 @@
 // Created with Todo+ VSCode extension  
 Todo: 
   Improvements:
+    ☐ When reporting match results, include the reff in the footer instead of reporter.
     ✔ Improve handling of empty cells in mappool picking spreadsheet @done(20-01-25 01:31)
       Fixed when spreadsheet scraping was updated for ANZT7S
     ✔ Get bot working on diony.live @started(19-08-19 04:57) @done(19-08-19 06:22) @lasted(1h25m37s)
@@ -54,6 +55,7 @@ Todo:
       Could indicate that a ticket is open for a match on the sheets to indicate that that time is not final
     ✔ !when command to help players identify when their match is regardless of timezone and considering daylight savings. @done(20-03-19 04:46)
     ✔ Handle qualifier lobbies including signing up to lobbies and reffing lobbies using a database @done(20-07-09 07:54)
+    ☐ Announce stream on a twitter account
     Big stuff for future tourneys:
       ☐ Predictions and associated rankings / Pickems
       ☐ Automatic reffing
