@@ -766,7 +766,7 @@ async def format(message):
                 winner = userIDs_to_usernames[scores[0]['user_id']]
 
             # Check if map was tiebreaker
-            if pool[bmapID] == 'TB':
+            if pool[bmapID].startswith('TB'):
                 firstline = f'{tiebreaker} **Tiebreaker**'
             else:
                 firstline = f'{emote}Pick #{i+1} by __{picker}__ [{pool[bmapID]}]'
