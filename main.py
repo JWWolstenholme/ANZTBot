@@ -692,11 +692,11 @@ async def format(message):
         #     await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) looks to be incomplete. Use !mp close', delete_after=10)
         #     return
 
-        batch = (await ws.batch_get(['B2:L5']))[0]
+        batch = (await ws.batch_get(['B2:M5']))[0]
         # Gather info together from sheet
         # syntax is batch[row][col] relative to the range B2:L5
-        p1 = {'username': batch[0][4], 'score': batch[1][4], 'ban1': batch[1][9][0:3], 'roll': batch[2][4]}
-        p2 = {'username': batch[0][6], 'score': batch[1][6], 'ban1': batch[2][9][0:3], 'roll': batch[2][6]}
+        p1 = {'username': batch[0][4], 'score': batch[1][4], 'ban1': batch[1][9][0:3], 'ban2': batch[1][10][0:3], 'roll': batch[2][4]}
+        p2 = {'username': batch[0][6], 'score': batch[1][6], 'ban1': batch[2][9][0:3], 'ban2': batch[2][10][0:3], 'roll': batch[2][6]}
         if '' in p1.values() or '' in p2.values():
             await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
                                        f'or both players on the sheet for match: {match_id}', delete_after=10)
@@ -712,9 +712,9 @@ async def format(message):
         # Construct the embed
         try:
             description = (f':flag_{country[p1["username"]]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
-                           f'Roll: {p1["roll"]} - Ban: {p1["ban1"]}\n'
+                           f'Roll: {p1["roll"]} - Bans: {p1["ban1"]}, {p1["ban2"]}\n'
                            f':flag_{country[p2["username"]]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
-                           f'Roll: {p2["roll"]} - Ban: {p2["ban1"]}')
+                           f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}, {p2["ban2"]}')
         except KeyError:
             await message.channel.send(f'{message.author.mention} Failed to map username(s) `{p1["username"]}` and/or `{p2["username"]}` from the spreadsheet to known participants. This is usually caused by incorrect capitilisation on the spreadsheet or name changes.', delete_after=16)
             return
