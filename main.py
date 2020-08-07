@@ -721,13 +721,13 @@ async def format(message):
         embed = discord.Embed(title=f'Match ID: {match_id}', description=description, color=0xe47607)
         embed.set_author(name=f'{tourneyRound}: ({p1["username"]}) vs ({p2["username"]})',
                          url=f'https://osu.ppy.sh/mp/{lobby_id}', icon_url='https://i.imgur.com/QqvKqI8.png')
-        # try:
-        #     referee = row[15]
-        #     if referee == '':
-        #         raise IndexError()
-        #     embed.set_footer(text=f'Refereed by {referee}')
-        # except IndexError:
-        embed.set_footer(text=f'Reported by {message.author.display_name}')
+        try:
+            referee = batch[3][8]
+            if referee == '':
+                raise IndexError()
+            embed.set_footer(text=f'Refereed by {referee}')
+        except IndexError:
+            embed.set_footer(text=f'Reported by {message.author.display_name}')
 
         # Construct the fields within the embed, displaying each pick and score differences
         firstpick = batch[3][5]
