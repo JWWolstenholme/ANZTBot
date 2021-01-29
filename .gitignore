@@ -1,4 +1,4 @@
 settings.py
 client_secret.json
-last_ping.txt
+last_stream_start.txt
 query scratchpad.postgres
