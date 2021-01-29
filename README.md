@@ -1,4 +1,4 @@
-<br><h2 align=center>
+<h2 align=center>
 <img src="https://i.imgur.com/Ds4qF7F.png" width=64 height=64 valign=middle>ANZTBot</h2>
 
 <p align=center><i>A Discord bot made for the ANZT Discord server to assist with the running of <a href="https://osu.ppy.sh/home">osu!</a> tournaments.</i></p>
@@ -24,7 +24,6 @@ See [this cog](cogs/error-reporting.py) for implementation.
 Pings a set user in a set channel for uncaught errors providing a full traceback and context.
 
 ![Screenshot of bot's message in discord](images/error-report.png)
-
 
 ## Requirements
 See [`requirements.txt`](requirements.txt) for specific packages.
