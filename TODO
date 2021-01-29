@@ -1,7 +1,7 @@
 // Created with Todo+ VSCode extension  
 Todo: 
   Improvements:
-    ☐ When reporting match results, include the reff in the footer instead of reporter.
+    ✔ When reporting match results, include the reff in the footer instead of reporter. @done(21-01-30 02:08)
     ✔ Improve handling of empty cells in mappool picking spreadsheet @done(20-01-25 01:31)
       Fixed when spreadsheet scraping was updated for ANZT7S
     ✔ Get bot working on diony.live @started(19-08-19 04:57) @done(19-08-19 06:22) @lasted(1h25m37s)
@@ -25,8 +25,8 @@ Todo:
         Had to compromise and change result command to be invoked with !format
       ✔ Use on_message() and get !format working without having to include "!format" @done(20-01-30 04:53)
         See bashbot for how to do this
-      ☐ Use cogs
-        ☐ If cogs allow, add commands for adding and removing cogs from within discord
+      ✔ Use cogs @done(21-01-30 02:08)
+        ✔ If cogs allow, add commands for adding and removing cogs from within discord @done(21-01-30 02:08)
       ☐ Refactor the two large methods
       ✔ Improve error handling. Currently does not catch BadArgument errors for example @done(20-01-25 01:32)
         I was using the on_error event instead of the on_command_error
@@ -61,7 +61,7 @@ Todo:
       ☐ Automatic reffing
         CeilingWaffle is working on something that might include this
   Bugs:
-    ☐ Twitch updated their api authentication to oauth
+    ✔ Twitch updated their api authentication to oauth @done(21-01-30 02:08)
     ✔ "https://osu.ppy.sh/mp/54169084 HD2 HR2" and "https://osu.ppy.sh/mp/54169903 NM5 DT2 0" cause key errors @started(19-08-19 03:37) @done(19-08-19 04:22) @lasted(45m9s)
       Caused by maps being aborted
     ✔ "https://osu.ppy.sh/mp/53996635 DT1 HD2" @done(19-08-19 04:29)
