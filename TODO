@@ -1,6 +1,13 @@
 // Created with Todo+ VSCode extension  
 Todo: 
   Improvements:
+    ☐ Utilise a resources cog to store and share resources that need to be used in multiple cogs, eg. database connection
+      Undecided as to whether to include utility functions like those found in resources.py  
+    ☐ Check if stream is live using webhooks instead of REST calls
+    ☐ Allow reporting of forfeited matches
+      Maybe allow for reporting a reason
+    ☐ Allow for proper parsing of lobbies that continued past the match was over. For showmatches of other maps in the pool for exmaple
+    ☐ Allow for matches that take place over more than one lobby
     ✔ When reporting match results, include the reff in the footer instead of reporter. @done(21-01-30 02:08)
     ✔ Improve handling of empty cells in mappool picking spreadsheet @done(20-01-25 01:31)
       Fixed when spreadsheet scraping was updated for ANZT7S
@@ -8,18 +15,13 @@ Todo:
       Server was stuck in a situation where it couldn't update it's package list. Switched to a new Ubuntu distro instead of Debain
     ✔ Get bot starting on boot on diony.live @done(19-09-01 00:46)
       See 'crontab -e'
-    ☐ Check if stream is live using webhooks instead of REST calls
     ✘ Show more info in user popout when stream is live like thumbnail and game. @cancelled(20-01-27 17:44)
       Not possible due to limitations for bots
     ✔ Use a new design for result embeds @done(20-01-30 04:53)
     ✔ Use the spreadsheet to get results, instead of requiring referee input @done(20-01-30 04:53)
-    ☐ Allow reporting of forfeited matches
-      Maybe allow for reporting a reason
     ✔ Allow matches to be reported before the mp has closed @done(20-02-09 03:49)
-    ☐ Allow for proper parsing of lobbies that continued past the match was over. For showmatches of other maps in the pool for exmaple
     ✔ Allow for bot interactions from the #referee channel instead of the public #results channel @done(20-02-23 03:48)
       Added special case to allow for match reporting from #referee. No other changes
-    ☐ Allow for matches that take place over more than one lobby
     Refactor:
       ✔ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18) @done(19-09-04 22:23) @lasted(2w2d3h5m42s)
         Had to compromise and change result command to be invoked with !format
@@ -27,7 +29,7 @@ Todo:
         See bashbot for how to do this
       ✔ Use cogs @done(21-01-30 02:08)
         ✔ If cogs allow, add commands for adding and removing cogs from within discord @done(21-01-30 02:08)
-      ☐ Refactor the two large methods
+      ✘ Refactor the two large methods @cancelled(21-01-30 02:43)
       ✔ Improve error handling. Currently does not catch BadArgument errors for example @done(20-01-25 01:32)
         I was using the on_error event instead of the on_command_error
       ✘ Use .format instead of f-strings @cancelled(20-01-25 01:33)
@@ -36,26 +38,28 @@ Todo:
       ✔ Allow referees to specify final score @done(19-09-04 22:24)
       ✔ Output match id when outputting match result @done(19-09-04 22:24)
   Features:
+    ☐ Verification process (and role) requiring going through Osu! oauth procedure to confirm player's osu and discord accounts.
+      This can be used, amonsgt other things, to nickname player's in discord to their osu username.
+      This also insures that registrations are legitmate as they should require being able to log in to your discord and osu account.
+    ☐ Allow for editing/reproccesing of previous match reports as opposed to having to delete and redo.
     ☐ Store tournament rules allowing for querying of rules and display all rules in a channel
       Should also display revisions/clarifications to rules
     ☐ Sign up to receive a reminder about certain matches
       Probably requires using a scheduling library and a database or something
-    ☐ Verification process (and role) requiring going through Osu! oauth procedure to confirm player's osu and discord accounts. Can nickname discord account to osu username.
-    ✔ !picked command showing all picked maps @done(20-01-25 01:34)
     ☐ !pick command which adds the pick to the sheet
+    ☐ !say command to make the bot say stuff. Could be funny or used for announcements
+    ☐ Integrate some features from https://github.com/LeaPhant/flowabot and find someway to credit it
+    ☐ Implement a sort of ticket system for reschedules. Should makes it easier for organisers
+      Could indicate that a ticket is open for a match on the sheets to indicate that that time is not final
+      ☐ Announce stream on a twitter account
+    ✔ !picked command showing all picked maps @done(20-01-25 01:34)
     ✔ Show status as streaming when osuanzt channel is live @done(20-01-25 18:05)
       Could be done via webhook (which might require making a small web server for GET and POST request) or periodic REST calls.
       Implemented with periodeic REST calls
-    ☐ !say command to make the bot say stuff. Could be funny or used for announcements
-    ☐ Integrate some features from https://github.com/LeaPhant/flowabot and find someway to credit it
     ✔ Add a stream ping role @done(20-02-23 08:09)
       Will require detecting if the stream is a different stream than the last time the bot checked and allow for users to add themselves to the role
-    ☐ Allow for editing/reproccesing of previous match reports as opposed to having to delete and redo.
-    ☐ Implement a sort of ticket system for reschedules. Should makes it easier for organisers
-      Could indicate that a ticket is open for a match on the sheets to indicate that that time is not final
     ✔ !when command to help players identify when their match is regardless of timezone and considering daylight savings. @done(20-03-19 04:46)
     ✔ Handle qualifier lobbies including signing up to lobbies and reffing lobbies using a database @done(20-07-09 07:54)
-    ☐ Announce stream on a twitter account
     Big stuff for future tourneys:
       ☐ Predictions and associated rankings / Pickems
       ☐ Automatic reffing
