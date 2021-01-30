@@ -5,21 +5,21 @@
 
 ## Features:
 ### Match result reporting
-See [this cog](cogs/match-result-posting.py) for implementation.
+See [`match-result-posting.py`](cogs/match-result-posting.py) for implementation.
 
-The feature is triggered by the match ID being posted in our referee's channel.
+The feature is triggered by the match ID being posted in our referee's channel.<br>It fetches data from Google Sheets and the osu! API.
 
 ![Screenshot of bot's message in discord](images/match-result.png)
 
 ### Twitch channel ping
-See [this cog](cogs/twitch-pickem.py) for implementation.
+See [`twitch-pickem.py`](cogs/twitch-pickem.py) for implementation.
 
 Includes a command to opt-in or out of receiving these pings by giving or removing the relevant discord role.
 
 ![Screenshot of bot's message in discord](images/stream-ping.png)
 
 ### Discord Error reporting
-See [this cog](cogs/error-reporting.py) for implementation.
+See [`error-reporting.py`](cogs/error-reporting.py) for implementation.
 
 Pings a set user in a set channel for uncaught errors providing a full traceback and context.
 
