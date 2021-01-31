@@ -6,6 +6,7 @@ Todo:
     ☐ Check if stream is live using webhooks instead of REST calls
     ☐ Allow reporting of forfeited matches
       Maybe allow for reporting a reason
+    ☐ Consider allowing the use of !delete from #referees to delete a bot's message in #match-results.
     ☐ Allow for proper parsing of lobbies that continued past the match was over. For showmatches of other maps in the pool for exmaple
     ☐ Allow for matches that take place over more than one lobby
     ✔ When reporting match results, include the reff in the footer instead of reporter. @done(21-01-30 02:08)
@@ -38,9 +39,20 @@ Todo:
       ✔ Allow referees to specify final score @done(19-09-04 22:24)
       ✔ Output match id when outputting match result @done(19-09-04 22:24)
   Features:
-    ☐ Verification process (and role) requiring going through Osu! oauth procedure to confirm player's osu and discord accounts.
+    ☐ Registration process utilising osu! oauth to confirm and link player's osu and discord accounts.
       This can be used, amonsgt other things, to nickname player's in discord to their osu username.
       This also insures that registrations are legitmate as they should require being able to log in to your discord and osu account.
+      https://osu.ppy.sh/docs/index.html?bash#authorization-code-grant
+      The gist is:
+        1. Send the discord user a link to osu!'s oauth gateway with our client id, redirect URI & their discord ID encrypted as the 'state' variable
+        2. The user grants us access to their osu! identity
+        3. User is redirected to our redirect URI where we now have a code and state variable
+        4. Send our client id, client secret & code to exchange for an access token
+        5. Use the access token to get the user's osu! id and decrypt the state variable from step 3 to get their discord id. 
+      ☐ Get a cog to start a web server
+      ☐ Get that web server working with https
+      ☐ Figure out how to encrypt a discord user id to include as the state parameter so we can identify which discord account is being redirected to the callback URI
+      ☐ Implement the authorization code grant oauth flow
     ☐ Allow for editing/reproccesing of previous match reports as opposed to having to delete and redo.
     ☐ Store tournament rules allowing for querying of rules and display all rules in a channel
       Should also display revisions/clarifications to rules
@@ -65,6 +77,9 @@ Todo:
       ☐ Automatic reffing
         CeilingWaffle is working on something that might include this
   Bugs:
+    ☐ The loop in twitch-pickem.py appears to continue even when it's containing cog is unloaded.
+    ☐ The bot sometimes pings multiple times for a stream going live https://discord.com/channels/199158455888642048/199158455888642048/805428678624149544
+      # This may have been fixed by commit 62386680b8a2106f276221d2bf22e99a396b8603 but I'll leave it here for the record.
     ✔ Twitch updated their api authentication to oauth @done(21-01-30 02:08)
     ✔ "https://osu.ppy.sh/mp/54169084 HD2 HR2" and "https://osu.ppy.sh/mp/54169903 NM5 DT2 0" cause key errors @started(19-08-19 03:37) @done(19-08-19 04:22) @lasted(45m9s)
       Caused by maps being aborted
