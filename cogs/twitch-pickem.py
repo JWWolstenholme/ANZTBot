@@ -1,5 +1,5 @@
 from discord.ext import commands
-from discord import Embed
+from discord import Embed, Streaming
 from resources import is_channel
 from settings import twitchannel, clientID, clientSecret
 import twitch
@@ -31,6 +31,11 @@ class TwitchAndPickemsCog(commands.Cog):
                 # print("Live") if live else print("Offline")
                 if live:
                     data = data[0]
+                    # Set bot's activity accordingly
+                    title = data['title']
+                    title = title if title != '' else 'with no title'
+                    activity = Streaming(name=title, url=f'https://www.twitch.tv/{twitchannel}', platform='Twitch')
+
                     # Determine if we should ping people based on our last saved stream start time
                     stream_start = data['started_at']
                     with open('last_stream_start.txt', 'r') as f:
@@ -43,6 +48,9 @@ class TwitchAndPickemsCog(commands.Cog):
                         with open('last_stream_start.txt', 'w') as f:
                             f.write(str(stream_start))
                         # print("Pinged")
+                else:
+                    activity = None
+                await self.bot.change_presence(activity=activity)
             except Exception:
                 errorcog = self.bot.get_cog('ErrorReportingCog')
                 await errorcog.on_error('anzt.twitch.loop')
