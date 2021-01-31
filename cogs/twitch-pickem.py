@@ -28,7 +28,6 @@ class TwitchAndPickemsCog(commands.Cog):
                 self.client.get_oauth()
                 data = self.client.get_streams(user_logins=[twitchannel])
                 live = str(data) != '[]'
-                # print("Live") if live else print("Offline")
                 if live:
                     data = data[0]
                     # Set bot's activity accordingly
@@ -40,14 +39,10 @@ class TwitchAndPickemsCog(commands.Cog):
                     stream_start = data['started_at']
                     with open('last_stream_start.txt', 'r') as f:
                         last_stream_start = datetime.fromisoformat(f.read())
-                    # print("Stream started at: " + str(stream_start))
-                    # print("Last ping at: " + str(last_stream_start))
-                    # print('------------------------------------')
                     if last_stream_start < stream_start:
                         await self.do_stream_ping(data)
                         with open('last_stream_start.txt', 'w') as f:
                             f.write(str(stream_start))
-                        # print("Pinged")
                 else:
                     activity = None
                 await self.bot.change_presence(activity=activity)
