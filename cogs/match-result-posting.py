@@ -7,7 +7,9 @@ from settings import *
 
 class MatchResultPostingCog(commands.Cog):
     delete_delay = 10
-    match_id_format = re.compile(r'^[a-h][0-9]+$', re.IGNORECASE)
+    match_id_format = '[a-h][0-9]+'
+    old_trigger = re.compile(f'^{match_id_format}$', re.IGNORECASE)
+    new_trigger = re.compile(f'^!{match_id_format}$', re.IGNORECASE)
     userID_username_cache = {}
     bmapID_json_cache = {}
     username_flag_cache = {}
@@ -21,10 +23,13 @@ class MatchResultPostingCog(commands.Cog):
             return
         # if message.channel.name in ['bot']:
         if message.channel.name in ['match-results', 'referee']:
-            if re.match(self.match_id_format, message.content):
+            if re.match(self.new_trigger, message.content):
                 async with message.channel.typing():
                     await message.delete()
                     await self.post_result(message)
+            if re.match(self.old_trigger, message.content):
+                async with message.channel.typing():
+                    await message.reply('Command has been updated. Use an exclamation mark before the ID to trigger it e.g. !F8', delete_after=self.delete_delay)
 
     @commands.command(aliases=['del', 'undo'])
     @is_channel('match-results')
@@ -41,7 +46,7 @@ class MatchResultPostingCog(commands.Cog):
             agc = await agcm.authorize()
             sh = await agc.open(sheet_file_name)
 
-            match_id = message.content.upper()
+            match_id = message.content.lstrip('!').upper()
             ws = await sh.worksheet(match_id)
 
             # Get lobby id from sheet
