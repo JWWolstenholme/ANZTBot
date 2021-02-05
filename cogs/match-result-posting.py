@@ -7,7 +7,7 @@ from settings import *
 
 class MatchResultPostingCog(commands.Cog):
     delete_delay = 10
-    match_id_format = '[a-h][0-9]+'
+    match_id_format = '[0-9]+'
     old_trigger = re.compile(f'^{match_id_format}$', re.IGNORECASE)
     new_trigger = re.compile(f'^!{match_id_format}$', re.IGNORECASE)
     userID_username_cache = {}
@@ -140,7 +140,6 @@ class MatchResultPostingCog(commands.Cog):
 
             # Get the mappool
             ws = await sh.worksheet('Mappool')
-            poolRound = 0
             cells = f'D{3+25*poolRound}:F{2+25*(poolRound+1)}'
             poolbatch = (await ws.batch_get([cells]))[0]
             pool = {}
