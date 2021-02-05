@@ -48,11 +48,15 @@ Todo:
         2. The user grants us access to their osu! identity
         3. User is redirected to our redirect URI where we now have a code and state variable
         4. Send our client id, client secret & code to exchange for an access token
-        5. Use the access token to get the user's osu! id and decrypt the state variable from step 3 to get their discord id. 
-      ☐ Get a cog to start a web server
-      ☐ Get that web server working with https
-      ☐ Figure out how to encrypt a discord user id to include as the state parameter so we can identify which discord account is being redirected to the callback URI
-      ☐ Implement the authorization code grant oauth flow
+        5. Use the access token to get the user's osu! id and decrypt the state variable from step 3 to get their discord id.
+        ☐ Get a cog to start a web server
+        ☐ Get that web server working with https
+        ☐ Figure out how to encrypt a discord user id to include as the state parameter so we can identify which discord account is being redirected to the callback URI
+        ☐ Implement the authorization code grant oauth flow
+      Alternative approach:
+        Suggested because I don't think you can start and stop a flask web server willy-nilly. The loading and caching etc has to be handled by mod_wsgi.
+        ☐ Get a static web server set up with apache
+        ☐ When user is sent to that web server, look for a running bot process and send it relevant info somehow
     ☐ Allow for editing/reproccesing of previous match reports as opposed to having to delete and redo.
     ☐ Store tournament rules allowing for querying of rules and display all rules in a channel
       Should also display revisions/clarifications to rules
@@ -63,7 +67,7 @@ Todo:
     ☐ Integrate some features from https://github.com/LeaPhant/flowabot and find someway to credit it
     ☐ Implement a sort of ticket system for reschedules. Should makes it easier for organisers
       Could indicate that a ticket is open for a match on the sheets to indicate that that time is not final
-      ☐ Announce stream on a twitter account
+    ☐ Announce stream on a twitter account
     ✔ !picked command showing all picked maps @done(20-01-25 01:34)
     ✔ Show status as streaming when osuanzt channel is live @done(20-01-25 18:05)
       Could be done via webhook (which might require making a small web server for GET and POST request) or periodic REST calls.
