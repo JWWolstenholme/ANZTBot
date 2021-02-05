@@ -77,8 +77,9 @@ Todo:
       ☐ Automatic reffing
         CeilingWaffle is working on something that might include this
   Bugs:
-    ☐ The loop in twitch-pickem.py appears to continue even when it's containing cog is unloaded.
-    ☐ The bot sometimes pings multiple times for a stream going live 
+    ✔ The loop in twitch-pickem.py appears to continue even when it's containing cog is unloaded. @done(21-02-05 23:49)
+      This and the below bug were fixed by switching to using the tasks extension in discord.py
+    ✔ The bot sometimes pings multiple times for a stream going live @done(21-02-05 23:49)
       Example: https://discord.com/channels/199158455888642048/199158455888642048/805428678624149544
       This may have been fixed by commit 62386680b8a2106f276221d2bf22e99a396b8603 but I'll leave it here for the record.
       Actually I think this is caused by the above bug. Meaning that after several reloads, there are several loops running.
