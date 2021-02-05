@@ -78,8 +78,10 @@ Todo:
         CeilingWaffle is working on something that might include this
   Bugs:
     ☐ The loop in twitch-pickem.py appears to continue even when it's containing cog is unloaded.
-    ☐ The bot sometimes pings multiple times for a stream going live https://discord.com/channels/199158455888642048/199158455888642048/805428678624149544
-      # This may have been fixed by commit 62386680b8a2106f276221d2bf22e99a396b8603 but I'll leave it here for the record.
+    ☐ The bot sometimes pings multiple times for a stream going live 
+      Example: https://discord.com/channels/199158455888642048/199158455888642048/805428678624149544
+      This may have been fixed by commit 62386680b8a2106f276221d2bf22e99a396b8603 but I'll leave it here for the record.
+      Actually I think this is caused by the above bug. Meaning that after several reloads, there are several loops running.
     ✔ Twitch updated their api authentication to oauth @done(21-01-30 02:08)
     ✔ "https://osu.ppy.sh/mp/54169084 HD2 HR2" and "https://osu.ppy.sh/mp/54169903 NM5 DT2 0" cause key errors @started(19-08-19 03:37) @done(19-08-19 04:22) @lasted(45m9s)
       Caused by maps being aborted
