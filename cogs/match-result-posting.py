@@ -110,7 +110,7 @@ class MatchResultPostingCog(commands.Cog):
                              url=f'https://osu.ppy.sh/mp/{lobby_id}')
 
             # Add streamer and referee to footer
-            ws = await sh.worksheet('Schedule')
+            ws = await sh.worksheet(schedule_sheet_name)
             schedule_batch = (await ws.batch_get(['B5:I100']))[0]
             referee = ''
             streamer = ''

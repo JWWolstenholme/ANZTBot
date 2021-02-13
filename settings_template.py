@@ -13,6 +13,8 @@ tourneyRound = ''
 poolRound = 0
 # The name of the ANZT7S spreadsheet that contains our referee's inputs
 sheet_file_name = ''
+# The name of the worksheet within the spreadsheet defined above that contains the schedule for this week
+schedule_sheet_name = ''
 # A list of referee Osu! user ids to ignore when looking at Osu! lobby scores
 # This only matters if the reffs play and actually beat one of the players
 referees = []
