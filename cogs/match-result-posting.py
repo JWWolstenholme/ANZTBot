@@ -40,6 +40,19 @@ class MatchResultPostingCog(commands.Cog):
                 await message.delete()
                 break
 
+    @commands.command()
+    @is_channel('organiser')
+    async def settings(self, ctx):
+        await ctx.message.delete()
+        description = 'These settings relate to match result posting only.\n'
+        description += f'**Message Prefix:**```\n{tourneyRound}```'
+        description += f'**Staff sheet file name:**```\n{sheet_file_name}```'
+        description += f'**Schedule sheet name:**```\n{schedule_sheet_name}```'
+        description += f'**Mappool sheet offset:**\nUses the formula `D<3+25*offset>:F<2+25*(offset+1)>` to narrow down cells on the sheet named Mappool. eg. D53:F77```\n{poolRound}```'
+        embed = discord.Embed(title='Settings', description=description, color=0xe47607)
+        embed.set_footer(text=f'Replying to {ctx.author.display_name}')
+        await ctx.send(embed=embed)
+
     async def post_result(self, message):
         async with message.channel.typing():
             # Get spreadsheet from google sheets
