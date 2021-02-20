@@ -79,11 +79,11 @@ class MatchResultPostingCog(commands.Cog):
             #     await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) looks to be incomplete. Use !mp close', delete_after=self.delete_delay)
             #     return
 
-            batch = (await ws.batch_get(['B2:L5']))[0]
+            batch = (await ws.batch_get(['B2:M5']))[0]
             # Gather info together from sheet
             # syntax is batch[row][col] relative to the range B2:L5
-            p1 = {'username': batch[0][4], 'score': batch[1][4], 'ban1': batch[1][9][0:3], 'roll': batch[2][4]}
-            p2 = {'username': batch[0][6], 'score': batch[1][6], 'ban1': batch[2][9][0:3], 'roll': batch[2][6]}
+            p1 = {'username': batch[0][4], 'score': batch[1][4], 'ban1': batch[1][9][0:3], 'ban2': batch[1][10][0:3], 'roll': batch[2][4]}
+            p2 = {'username': batch[0][6], 'score': batch[1][6], 'ban1': batch[2][9][0:3], 'ban2': batch[2][10][0:3], 'roll': batch[2][6]}
             if '' in p1.values() or '' in p2.values():
                 await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
                                            f'or both players on the sheet for match: {match_id}', delete_after=self.delete_delay)
@@ -113,11 +113,24 @@ class MatchResultPostingCog(commands.Cog):
                 flag = self.username_flag_cache[p2['username']]
             p2['flag'] = flag
 
+            # Get TB bans, but only if they are present
+            try:
+                p1_tb_ban = batch[1][11][0:3]
+                p2_tb_ban = batch[2][11][0:3]
+            except IndexError:
+                p1_tb_ban = p2_tb_ban = ''
+            else:
+                if 'TB0' in [p1_tb_ban, p2_tb_ban]:
+                    p1_tb_ban = p2_tb_ban = ''
+                else:
+                    p1_tb_ban = ', ' + p1_tb_ban
+                    p2_tb_ban = ', ' + p2_tb_ban
+
             # Construct the embed
             description = (f':flag_{p1["flag"]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
-                           f'Roll: {p1["roll"]} - Ban: {p1["ban1"]}\n'
+                           f'Roll: {p1["roll"]} - Bans: {p1["ban1"]}, {p1["ban2"]}{p1_tb_ban}\n'
                            f':flag_{p2["flag"]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
-                           f'Roll: {p2["roll"]} - Ban: {p2["ban1"]}')
+                           f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}, {p2["ban2"]}{p2_tb_ban}')
             embed = discord.Embed(title=f'Match ID: {match_id}', description=description, color=0xe47607)
             embed.set_author(name=f'{tourneyRound}: ({p1["username"]}) vs ({p2["username"]})',
                              url=f'https://osu.ppy.sh/mp/{lobby_id}')
