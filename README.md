@@ -31,9 +31,8 @@ See [server/README.md](server/) for details about the web server and [`tourney-r
 
 Allows users to sign up for tournaments by interacting with the bot.
 
-This uses osu!'s OAuth2 service and is used to link each user's osu! and discord accounts.
-
-Previously we used Google Forms but this allowed people to sign up on behalf of others, regardless of their intention to play or not play.
+This uses osu!'s OAuth2 service and is used to link each user's osu! and discord accounts.<br>
+Previously we used Google Forms but this allowed people to sign up on behalf of others, regardless of their intention to play or not. In addition, form responses often contained human error.
 
 ## Requirements
 See [`requirements.txt`](requirements.txt) for specific packages.

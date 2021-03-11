@@ -3,6 +3,7 @@ import asyncio
 import aiohttp
 import pickle
 from cryptography.fernet import Fernet, InvalidToken
+from settings import key, osu_app_client_id, osu_app_client_secret
 
 
 class TourneyRegisterCog(commands.Cog):
@@ -10,13 +11,12 @@ class TourneyRegisterCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = aiohttp.ClientSession()
-        self.key = Fernet.generate_key()
 
     @commands.command()
     async def register(self, ctx):
         discord_id = str(ctx.author.id)
-        discord_id_enc = Fernet(self.key).encrypt(discord_id.encode())
-        oauth_url = f'https://osu.ppy.sh/oauth/authorize?client_id=2870&response_type=code&redirect_uri=http://osuanzt.com/register/&state={discord_id_enc.decode()}'
+        discord_id_enc = Fernet(key).encrypt(discord_id.encode())
+        oauth_url = f'https://osu.ppy.sh/oauth/authorize?client_id={osu_app_client_id}&response_type=code&redirect_uri=http://osuanzt.com/register/&state={discord_id_enc.decode()}'
         await ctx.send(f'Register via {oauth_url}')
 
     async def handler(self, reader, writer):
@@ -28,15 +28,15 @@ class TourneyRegisterCog(commands.Cog):
         code = data['code']
         state = data['state']
         try:
-            state = Fernet(self.key).decrypt(state.encode()).decode()
+            state = Fernet(key).decrypt(state.encode()).decode()
         except InvalidToken:
             print('token is bad')
             return
 
         print(f'Using one-time code to get authorization token')
         data = {
-            'client_id': 2870,
-            'client_secret': 'LwVcOqPiRkfngFwVjAXMSlyfViwQzViAZL0h9Aff',
+            'client_id': osu_app_client_id,
+            'client_secret': osu_app_client_secret,
             'code': code,
             'grant_type': 'authorization_code',
             'redirect_uri': 'http://osuanzt.com/register/'
