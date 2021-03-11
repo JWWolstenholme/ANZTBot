@@ -7,7 +7,7 @@ This handles the part of the [OAuth 2.0 Authorization Code Grant](https://oauth.
 More specifically when a user is redirected back to [osuanzt.com/register](http://osuanzt.com/register/), this web server will send the OAuth values included within the url parameters to the [`tourney-registering.py`](/cogs/tourney-registering.py) cog running in an instance of ANZTBot. ANZTBot then continues the rest of the OAuth procedure. A [TCP Python Stream](https://docs.python.org/3/library/asyncio-stream.html#tcp-echo-client-using-streams) is used to communicate between the web server and the discord bot.
 
 
-## How I configured this to run in producation
+## How I configured this to run in production
 Configuring the flask web server to interface with Apache2 via WSGI and using the correct version of Python with the correct packages was quite an ordeal.
 
 I initially followed [Flask's documentation on mod_wsgi](https://flask.palletsprojects.com/en/1.1.x/deploying/mod_wsgi/). However `libapache2-mod-wsgi-py3` installed a version of `mod_wsgi` compiled for Python `3.5.2` while I was developing in `3.9`.<br>
