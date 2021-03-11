@@ -81,14 +81,14 @@ class MatchResultPostingCog(commands.Cog):
 
             batch = (await ws.batch_get(['B2:M5']))[0]
             # Gather info together from sheet
-            # syntax is batch[row][col] relative to the range B2:L5
+            # syntax is batch[row][col] relative to the range B2:M5
             p1 = {'username': batch[0][4], 'score': batch[1][4], 'ban1': batch[1][9][0:3], 'ban2': batch[1][10][0:3], 'roll': batch[2][4]}
             p2 = {'username': batch[0][6], 'score': batch[1][6], 'ban1': batch[2][9][0:3], 'ban2': batch[2][10][0:3], 'roll': batch[2][6]}
             if '' in p1.values() or '' in p2.values():
                 await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
                                            f'or both players on the sheet for match: {match_id}', delete_after=self.delete_delay)
                 return
-            # Used to line up the scores vertically by left justifying the username to this amount
+            # Used to line up the scores horizontally by left justifying the username to this amount
             longest_name_len = len(max([p1['username'], p2['username']], key=len))
             # Highlight who the winner was using bold and an emoji
             if p1['score'] > p2['score']:
@@ -97,6 +97,7 @@ class MatchResultPostingCog(commands.Cog):
                 p2['score'] = f'**{p2["score"]}** :trophy:'
 
             # Retreive player's flags from api or cache
+            # Duplicate code, I know
             if p1['username'] not in self.username_flag_cache.keys():
                 json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={p1["username"]}&m=0&type=string')
                 flag = json[0]['country'].lower()
@@ -229,7 +230,6 @@ class MatchResultPostingCog(commands.Cog):
                 except Exception:
                     continue
             else:
-
                 await message.channel.send(f'{message.author.mention} Couldn\'t post to the results channel for some reason. ping diony', delete_after=self.delete_delay)
 
 

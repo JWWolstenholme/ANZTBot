@@ -14,6 +14,8 @@ class TourneyRegisterCog(commands.Cog):
 
     @commands.command()
     async def register(self, ctx):
+        # We encrypt the user's discord id so we can ensure the user can't generate an OAuth url that would link to another user's discord account
+        # And also so we can tell which discord account started the OAuth process
         discord_id = str(ctx.author.id)
         discord_id_enc = Fernet(key).encrypt(discord_id.encode())
         oauth_url = f'https://osu.ppy.sh/oauth/authorize?client_id={osu_app_client_id}&response_type=code&redirect_uri=http://osuanzt.com/register/&state={discord_id_enc.decode()}'
@@ -25,6 +27,7 @@ class TourneyRegisterCog(commands.Cog):
         addr = writer.get_extra_info('peername')
         print(f"Received {data!r} from {addr!r}")
 
+        # See https://osu.ppy.sh/docs/index.html?bash#authorization-code-grant to see what the rest of this method is doing.
         code = data['code']
         state = data['state']
         try:
@@ -41,6 +44,7 @@ class TourneyRegisterCog(commands.Cog):
             'grant_type': 'authorization_code',
             'redirect_uri': 'http://osuanzt.com/register/'
         }
+        # There's duplicate code here but idk how to elegantly fix that
         async with self.session.post('https://osu.ppy.sh/oauth/token', data=data) as r:
             if r.status != 200:
                 print('failed to get authorization token')
@@ -63,11 +67,8 @@ class TourneyRegisterCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await asyncio.sleep(2)
-
-        # self.dioguild = self.bot.get_guild(255990138289651713)
-        # self.diochannel = self.dioguild.get_channel(610482665573056512)
-        # self.diony = (await self.dioguild.query_members(user_ids=[81316514216554496]))[0].mention
+        # Wait for error cog to be ready
+        await asyncio.sleep(1)
 
         server = await asyncio.start_server(self.handler, '127.0.0.1', 7865)
         addr = server.sockets[0].getsockname()
