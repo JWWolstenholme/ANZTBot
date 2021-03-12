@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet, InvalidToken
 from settings import *
 
 
-class TourneyRegisterCog(commands.Cog):
+class TourneySignupCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -100,4 +100,4 @@ class TourneyRegisterCog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(TourneyRegisterCog(bot))
+    bot.add_cog(TourneySignupCog(bot))
