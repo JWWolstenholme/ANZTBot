@@ -31,6 +31,8 @@ key = b''
 osu_app_client_id = ''
 osu_app_client_secret = ''
 redirect_url = 'https://osuanzt.com/register/'
+signup_close_date = 'June 15th'
+forum_post_url = ''
 
 # Database credentials - Not currently in use
 # dbname = ''

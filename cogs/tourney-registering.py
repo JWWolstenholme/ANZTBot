@@ -1,9 +1,10 @@
 from discord.ext import commands
+from discord import Embed, User
 import asyncio
 import aiohttp
 import pickle
 from cryptography.fernet import Fernet, InvalidToken
-from settings import key, osu_app_client_id, osu_app_client_secret, redirect_url
+from settings import *
 
 
 class TourneyRegisterCog(commands.Cog):
@@ -14,12 +15,33 @@ class TourneyRegisterCog(commands.Cog):
 
     @commands.command()
     async def register(self, ctx):
-        # We encrypt the user's discord id so we can ensure the user can't generate an OAuth url that would link to another user's discord account
-        # And also so we can tell which discord account started the OAuth process
-        discord_id = str(ctx.author.id)
-        discord_id_enc = Fernet(key).encrypt(discord_id.encode())
-        oauth_url = f'https://osu.ppy.sh/oauth/authorize?client_id={osu_app_client_id}&response_type=code&redirect_uri={redirect_url}&state={discord_id_enc.decode()}'
-        await ctx.send(f'Register via {oauth_url}')
+        await self.prompt_user(ctx.author)
+
+    async def generate_oauth_url(self, user_id: int):
+        user_id = str(user_id).encode()
+        user_id_enc = Fernet(key).encrypt(user_id)
+        return (
+            f'https://osu.ppy.sh/oauth/authorize?'
+            f'client_id={osu_app_client_id}&'
+            f'response_type=code&'
+            f'redirect_uri={redirect_url}&'
+            f'state={user_id_enc.decode()}'
+        )
+
+    async def prompt_user(self, user: User):
+        oauth_url = await self.generate_oauth_url(user.id)
+        colour = 0xf5a623
+
+        embed = Embed(title="Click here to register for ANZT8W", colour=colour, url=oauth_url)
+        embed.set_footer(text=f"Registrations close {signup_close_date}")
+        await user.send(embed=embed)
+
+        embed = Embed(colour=colour,
+                      description="```fix\nYou will be prompted to log in on the official osu! site.\n\n"
+                                  "This lets us confirm you are the owner of these Discord and osu! accounts.```"
+                                  "*[Forum Post](https://osu.ppy.sh/community/forums/topics/1204722) - "
+                                  "[Source](https://github.com/JWWolstenholme/ANZTBot) - by Diony*")
+        await user.send(embed=embed)
 
     async def handler(self, reader, writer):
         data = await reader.read()
