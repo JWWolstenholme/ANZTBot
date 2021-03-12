@@ -14,7 +14,7 @@ Todo:
           ☐ Send whether or not the OAuth process was successfull back to the web server to give feedback to the user
         ☐ Allow for the user to signify they want to register by either messaging the bot or reacting to a certain message
         ☐ Use an embed to send the user the OAuth link so they don't see the ugly URL.
-      ☐ Get that web server working with https
+      ✔ Get that web server working with https @done(21-03-12 22:12)
       ☐ Persist the final osu and discord IDs of registered users somewhere so organisers can use it
     ☐ Utilise a resources cog to store and share resources that need to be used in multiple cogs, eg. database connection
       Undecided as to whether to include utility functions like those found in resources.py  

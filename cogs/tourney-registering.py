@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 import pickle
 from cryptography.fernet import Fernet, InvalidToken
-from settings import key, osu_app_client_id, osu_app_client_secret
+from settings import key, osu_app_client_id, osu_app_client_secret, redirect_url
 
 
 class TourneyRegisterCog(commands.Cog):
@@ -18,7 +18,7 @@ class TourneyRegisterCog(commands.Cog):
         # And also so we can tell which discord account started the OAuth process
         discord_id = str(ctx.author.id)
         discord_id_enc = Fernet(key).encrypt(discord_id.encode())
-        oauth_url = f'https://osu.ppy.sh/oauth/authorize?client_id={osu_app_client_id}&response_type=code&redirect_uri=http://osuanzt.com/register/&state={discord_id_enc.decode()}'
+        oauth_url = f'https://osu.ppy.sh/oauth/authorize?client_id={osu_app_client_id}&response_type=code&redirect_uri={redirect_url}&state={discord_id_enc.decode()}'
         await ctx.send(f'Register via {oauth_url}')
 
     async def handler(self, reader, writer):
@@ -42,7 +42,7 @@ class TourneyRegisterCog(commands.Cog):
             'client_secret': osu_app_client_secret,
             'code': code,
             'grant_type': 'authorization_code',
-            'redirect_uri': 'http://osuanzt.com/register/'
+            'redirect_uri': redirect_url
         }
         # There's duplicate code here but idk how to elegantly fix that
         async with self.session.post('https://osu.ppy.sh/oauth/token', data=data) as r:

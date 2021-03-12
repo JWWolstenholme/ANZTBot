@@ -13,13 +13,13 @@ apiKey = ''
 
 # Match Result tourney settings
 # Shown to users to signify round in results. Recommend an acronym like RO16 or GS.
-tourneyRound = ''
+tourneyRound = 'GS'
 # Tells the bot which range of cells to look at for the current mappool, with our specific sheets
 poolRound = 0
 # The name of the ANZT7S spreadsheet that contains our referee's inputs
-sheet_file_name = ''
+sheet_file_name = 'ANZT8S Bracket Stage Staff Sheet'
 # The name of the worksheet within the spreadsheet defined above that contains the schedule for this week
-schedule_sheet_name = ''
+schedule_sheet_name = 'Finals Schedule'
 # A list of referee Osu! user ids to ignore when looking at Osu! lobby scores
 # This only matters if the reffs play and actually beat one of the players
 referees = []
@@ -30,6 +30,7 @@ referees = []
 key = b''
 osu_app_client_id = ''
 osu_app_client_secret = ''
+redirect_url = 'https://osuanzt.com/register/'
 
 # Database credentials - Not currently in use
 # dbname = ''
