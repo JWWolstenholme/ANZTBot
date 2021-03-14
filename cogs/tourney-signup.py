@@ -3,6 +3,7 @@ from discord import Embed, User
 import asyncio
 import aiohttp
 import pickle
+import asyncpg
 from cryptography.fernet import Fernet, InvalidToken
 from settings import *
 
@@ -12,6 +13,7 @@ class TourneySignupCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = aiohttp.ClientSession()
+        self.connpool = asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)
 
     @commands.command()
     async def register(self, ctx):
@@ -33,7 +35,7 @@ class TourneySignupCog(commands.Cog):
         colour = 0xf5a623
 
         embed = Embed(title="Click here to register for ANZT8W", colour=colour, url=oauth_url)
-        embed.set_footer(text=f"Registrations close {signup_close_date}")
+        embed.set_footer(text=f"This link is unique to you - Registrations close {signup_close_date}")
         await user.send(embed=embed)
 
         embed = Embed(colour=colour,
@@ -84,8 +86,14 @@ class TourneySignupCog(commands.Cog):
             user_id = json['id']
         print(f'osu! UserID: {user_id}')
         print(f'Discord UserID: {state}')
+        await self.persist_signup(state, user_id)
         print("Close the connection")
         writer.close()
+
+    async def persist_signup(self, discord_id, osu_id):
+        async with self.connpool.acquire() as conn:
+            async with conn.transaction():
+                await conn.execute('''insert into signups values ($1, $2)''', discord_id, osu_id)
 
     @commands.Cog.listener()
     async def on_ready(self):

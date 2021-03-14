@@ -8,7 +8,7 @@ initial_extensions = ['cogs.' + name for name in [
     'match-result-posting',
     'error-reporting',
     'twitch-pickem',
-    'tourney-registering'
+    'tourney-signup'
 ]]
 
 if __name__ == '__main__':
