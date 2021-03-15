@@ -14,9 +14,15 @@ async def send_back_to_discord_bot(state, code):
         'code': code
     }
     writer.write(pickle.dumps(data))
+    writer.write_eof()
+    await writer.drain()
 
+    result = (await reader.read()).decode()
+    addr = writer.get_extra_info('peername')
+    print(f"Received {result!r} from {addr!r}")
     print("Closing connection")
     writer.close()
+    return result
 
 
 @app.route("/")
@@ -26,11 +32,10 @@ def hello():
     if None in [state, code]:
         return "Incorrect arguments"
     try:
-        asyncio.run(send_back_to_discord_bot(state, code))
+        result = asyncio.run(send_back_to_discord_bot(state, code))
+        return result
     except ConnectionRefusedError:
         return "Couldn't communicate with discord bot"
-    else:
-        return "Process worked"
 
 
 if __name__ == "__main__":

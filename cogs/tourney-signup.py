@@ -49,12 +49,18 @@ class TourneySignupCog(commands.Cog):
                                   "[Source](https://github.com/JWWolstenholme/ANZTBot) - by Diony*")
         await user.send(embed=embed)
 
+    async def write(self, writer, string):
+        writer.write(string.encode())
+        writer.write_eof()
+        await writer.drain()
+
     async def handler(self, reader, writer):
         try:
             await self.handle(reader, writer)
         except Exception:
             errorcog = self.bot.get_cog('ErrorReportingCog')
             await errorcog.on_error('anzt.signup.handle')
+            await self.write(writer, 'There was an unexpected error. Diony will fix it asap.')
         finally:
             writer.close()
 
@@ -70,7 +76,12 @@ class TourneySignupCog(commands.Cog):
         try:
             state = Fernet(key).decrypt(state.encode()).decode()
         except InvalidToken:
-            print('token is bad')
+            await self.write(writer, "'State' parameter is bad: try asking ANZT bot for another link.")
+            return
+
+        signed_up_already = await self.check_if_registered(state)
+        if signed_up_already:
+            await self.write(writer, "You're already signed up!")
             return
 
         print(f'Using one-time code to get authorization token')
@@ -85,6 +96,7 @@ class TourneySignupCog(commands.Cog):
         async with self.session.post('https://osu.ppy.sh/oauth/token', data=data) as r:
             if r.status != 200:
                 print('failed to get authorization token')
+                await self.write(writer, "Failed to communicate with osu! servers. Maybe they're down atm?")
                 return
             json = await r.json()
             access_token = json['access_token']
@@ -94,14 +106,22 @@ class TourneySignupCog(commands.Cog):
         async with self.session.get('https://osu.ppy.sh/api/v2/me/osu', headers=headers) as r:
             if r.status != 200:
                 print('failed to get user info')
+                await self.write(writer, "Failed to communicate with osu! servers. Maybe they're down atm?")
                 return
             json = await r.json()
             user_id = json['id']
         print(f'osu! UserID: {user_id}')
         print(f'Discord UserID: {state}')
         await self.persist_signup(state, user_id)
+        await self.write(writer, "You're now registered!")
         print("Close the connection")
         writer.close()
+
+    async def check_if_registered(self, discord_id):
+        async with self.connpool.acquire() as conn:
+            async with conn.transaction():
+                result = await conn.fetchrow('''select discord_id from signups where discord_id=$1''', discord_id)
+                return bool(result)
 
     async def persist_signup(self, discord_id, osu_id):
         async with self.connpool.acquire() as conn:
