@@ -13,7 +13,11 @@ class TourneySignupCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = aiohttp.ClientSession()
-        self.connpool = asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)
+
+    def cog_unload(self):
+        loop = self.bot.loop
+        loop.create_task(self.connpool.close())
+        loop.create_task(self.session.close())
 
     @commands.command()
     async def register(self, ctx):
@@ -99,6 +103,7 @@ class TourneySignupCog(commands.Cog):
     async def on_ready(self):
         # Wait for error cog to be ready
         await asyncio.sleep(1)
+        self.connpool = await asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)
 
         server = await asyncio.start_server(self.handler, '127.0.0.1', 7865)
         addr = server.sockets[0].getsockname()
