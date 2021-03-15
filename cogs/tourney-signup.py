@@ -50,6 +50,15 @@ class TourneySignupCog(commands.Cog):
         await user.send(embed=embed)
 
     async def handler(self, reader, writer):
+        try:
+            await self.handle(reader, writer)
+        except Exception:
+            errorcog = self.bot.get_cog('ErrorReportingCog')
+            await errorcog.on_error('anzt.signup.handle')
+        finally:
+            writer.close()
+
+    async def handle(self, reader, writer):
         data = await reader.read()
         data = pickle.loads(data)
         addr = writer.get_extra_info('peername')
