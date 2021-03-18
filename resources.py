@@ -99,5 +99,5 @@ def init():
     agcm = gspread_asyncio.AsyncioGspreadClientManager(__get_creds)
 
     # Postgresql connection manager
-    global connpool
-    connpool = asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)
+    # global connpool
+    # connpool = asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)

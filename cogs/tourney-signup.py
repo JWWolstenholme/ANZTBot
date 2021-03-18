@@ -9,10 +9,12 @@ from settings import *
 
 
 class TourneySignupCog(commands.Cog):
+    delete_delay = 10
 
     def __init__(self, bot):
         self.bot = bot
         self.session = aiohttp.ClientSession()
+        self.prompted_users = []
 
     def cog_unload(self):
         loop = self.bot.loop
@@ -21,7 +23,49 @@ class TourneySignupCog(commands.Cog):
 
     @commands.command()
     async def register(self, ctx):
-        await self.prompt_user(ctx.author)
+        # If user was prompted.
+        if await self.prompt_user(ctx.author):
+            await ctx.message.add_reaction('✅')
+
+    async def user_prompted(self, user_id):
+        return user_id in self.prompted_users
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        if self.watch_message_id is None:
+            return
+        if payload.message_id != self.watch_message_id:
+            return
+        await self.prompt_user(payload.member)
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def watch(self, ctx, message):
+        await ctx.trigger_typing()
+        await ctx.message.delete()
+
+        try:
+            message = await MessageConverter().convert(ctx, message)
+        except MessageNotFound:
+            await ctx.send("Couldn't find a message with what you provided.", delete_after=self.delete_delay)
+            return
+
+        # Save to the database
+        async with self.connpool.acquire() as conn:
+            async with conn.transaction():
+                # We store the message id (which is unique per channel) and check it against reactions in all channels
+                # so there could be false postives with messages from other channels.
+                # I do this because I don't know how to convert a full message link url to a message without a context.
+                await conn.execute('''update settings set watch_message_link = $1;''', message.id)
+
+        self.watch_message_id = message.id
+        await ctx.send(f'{ctx.author.mention} Now watching that message.', delete_after=self.delete_delay)
+
+    async def load_from_settings(self):
+        async with self.connpool.acquire() as conn:
+            async with conn.transaction():
+                record = await conn.fetchrow('select * from settings')
+                self.watch_message_id = record['watch_message_link']
 
     async def generate_oauth_url(self, user_id: int):
         user_id = str(user_id).encode()
@@ -35,6 +79,9 @@ class TourneySignupCog(commands.Cog):
         )
 
     async def prompt_user(self, user: User):
+        if await self.user_prompted(user.id):
+            return False
+
         oauth_url = await self.generate_oauth_url(user.id)
         colour = 0xf5a623
 
@@ -48,6 +95,8 @@ class TourneySignupCog(commands.Cog):
                                   "*[Forum Post](https://osu.ppy.sh/community/forums/topics/1204722) - "
                                   "[Source](https://github.com/JWWolstenholme/ANZTBot) - by Diony*")
         await user.send(embed=embed)
+        self.prompted_users.append(user.id)
+        return True
 
     async def write(self, writer, string):
         writer.write(string.encode())
@@ -133,6 +182,7 @@ class TourneySignupCog(commands.Cog):
         # Wait for error cog to be ready
         await asyncio.sleep(1)
         self.connpool = await asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)
+        await self.load_from_settings()
 
         server = await asyncio.start_server(self.handler, '127.0.0.1', 7865)
         addr = server.sockets[0].getsockname()

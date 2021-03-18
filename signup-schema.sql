@@ -4,7 +4,10 @@ create table signups (
 );
 
 create table settings (
-    -- Table should only ever have one row
+    -- Table should only ever have one row. This and the constraint ensure there is only ever 0 or 1 row.
+    onerow bool primary key default TRUE,
     -- message to watch for reactions on to signify user wants to register
-    message_link text
-)
+    watch_message_link numeric(21),
+    constraint onerow check (onerow)
+);
+insert into settings values (TRUE, NULL);
