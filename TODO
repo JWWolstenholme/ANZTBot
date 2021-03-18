@@ -12,12 +12,12 @@ Todo:
             ☐ Bot couldn't finish OAuth process
             ☐ Successfully registered
           ✔ Send whether or not the OAuth process was successfull back to the web server to give feedback to the user @done(21-03-16 07:39)
-        ☐ Allow for the user to signify they want to register by either messaging the bot or reacting to a certain message
+        ✔ Allow for the user to signify they want to register by either messaging the bot or reacting to a certain message @done(21-03-19 05:10)
         ✔ Use an embed to send the user the OAuth link so they don't see the ugly URL. @done(21-03-13 00:52)
       ✔ Get that web server working with https @done(21-03-12 22:12)
       ✔ Persist the final osu and discord IDs of registered users somewhere so organisers can use it @done(21-03-16 07:40)
       ☐ Add a way to easily export the signups
-      ☐ Reject signups from users with the wrong flag
+      ✔ Reject signups from users with the wrong flag @done(21-03-19 05:51)
     ☐ Utilise a resources cog to store and share resources that need to be used in multiple cogs, eg. database connection
       Undecided as to whether to include utility functions like those found in resources.py  
     ☐ Check if stream is live using webhooks instead of REST calls
@@ -41,6 +41,7 @@ Todo:
     ✔ Allow for bot interactions from the #referee channel instead of the public #results channel @done(20-02-23 03:48)
       Added special case to allow for match reporting from #referee. No other changes
     Refactor:
+      ☐ use GitHub issues instead of this file.
       ✔ Use discord.ext.commands instead of crazy regex https://discordpy.readthedocs.io/en/latest/ext/commands/index.html @started(19-08-19 19:18) @done(19-09-04 22:23) @lasted(2w2d3h5m42s)
         Had to compromise and change result command to be invoked with !format
       ✔ Use on_message() and get !format working without having to include "!format" @done(20-01-30 04:53)

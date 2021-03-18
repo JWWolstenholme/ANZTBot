@@ -33,6 +33,7 @@ osu_app_client_secret = ''
 redirect_url = 'https://osuanzt.com/register/'
 signup_close_date = 'June 15th'
 forum_post_url = ''
+allowed_countries = ['NZ', 'AU']
 
 # Database credentials - Not currently in use
 # dbname = ''

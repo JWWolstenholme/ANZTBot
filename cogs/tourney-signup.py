@@ -161,7 +161,12 @@ class TourneySignupCog(commands.Cog):
                 await self.write(writer, "Failed to communicate with osu! servers. Maybe they're down atm?")
                 return
             json = await r.json()
+            user_country = json['country_code']
             user_id = json['id']
+        if user_country not in allowed_countries:
+            print('user rejected due to their flag')
+            await self.write(writer, 'You must have an Australian or New Zealand flag on your profile!')
+            return
         print(f'osu! UserID: {user_id}')
         print(f'Discord UserID: {state}')
         await self.persist_signup(state, user_id)
