@@ -1,0 +1,32 @@
+html, body, .container {
+	height: 100%;
+	color: white;
+}
+
+body {
+	background-image: url('../images/osu!triangles-tile-222.png');
+	background-color: #3a3a3a;
+}
+
+.container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.image {
+	width: 200px;
+	height: 200px;
+    padding-bottom: 3em;
+}
+
+p {
+	font-size: 2em;
+	font-family: 'Comfortaa', cursive;
+	font-weight: 900;
+}
+
+.box {
+	display:inline;
+}
