@@ -101,8 +101,12 @@ class TourneySignupCog(commands.Cog):
         self.prompted_users.append(user.id)
         return True
 
-    async def write(self, writer, string):
-        writer.write(string.encode())
+    async def write(self, writer, success: bool, message: str):
+        data = {
+            'success': success,
+            'message': message
+        }
+        writer.write(pickle.dumps(data))
         writer.write_eof()
         await writer.drain()
 
@@ -112,7 +116,7 @@ class TourneySignupCog(commands.Cog):
         except Exception:
             errorcog = self.bot.get_cog('ErrorReportingCog')
             await errorcog.on_error('anzt.signup.handle')
-            await self.write(writer, 'There was an unexpected error. Diony will fix it asap.')
+            await self.write(writer, False, 'There was an error. Diony will fix it asap.')
         finally:
             writer.close()
 
@@ -128,12 +132,11 @@ class TourneySignupCog(commands.Cog):
         try:
             state = Fernet(key).decrypt(state.encode()).decode()
         except InvalidToken:
-            await self.write(writer, "'State' parameter is bad: try asking ANZT bot for another link.")
+            await self.write(writer, False, "'State' parameter is bad: try asking ANZT bot for another link.")
             return
 
-        signed_up_already = await self.check_if_registered(state)
-        if signed_up_already:
-            await self.write(writer, "You're already signed up!")
+        if await self.check_if_registered(state):
+            await self.write(writer, False, "You're already signed up!")
             return
 
         print(f'Using one-time code to get authorization token')
@@ -148,7 +151,7 @@ class TourneySignupCog(commands.Cog):
         async with self.session.post('https://osu.ppy.sh/oauth/token', data=data) as r:
             if r.status != 200:
                 print('failed to get authorization token')
-                await self.write(writer, "Failed to communicate with osu! servers. Maybe they're down atm?")
+                await self.write(writer, False, "Failed to reach osu! servers. Maybe they're down?")
                 return
             json = await r.json()
             access_token = json['access_token']
@@ -158,19 +161,19 @@ class TourneySignupCog(commands.Cog):
         async with self.session.get('https://osu.ppy.sh/api/v2/me/osu', headers=headers) as r:
             if r.status != 200:
                 print('failed to get user info')
-                await self.write(writer, "Failed to communicate with osu! servers. Maybe they're down atm?")
+                await self.write(writer, False, "Failed to reach osu! servers. Maybe they're down?")
                 return
             json = await r.json()
             user_country = json['country_code']
             user_id = json['id']
         if user_country not in allowed_countries:
             print('user rejected due to their flag')
-            await self.write(writer, 'You must have an Australian or New Zealand flag on your profile!')
+            await self.write(writer, False, 'You need an Australian or New Zealand flag on your profile!')
             return
         print(f'osu! UserID: {user_id}')
         print(f'Discord UserID: {state}')
         await self.persist_signup(state, user_id)
-        await self.write(writer, "You're now registered!")
+        await self.write(writer, True, "You're now registered!")
         print("Close the connection")
         writer.close()
 

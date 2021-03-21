@@ -1,10 +1,10 @@
 import asyncio
-from flask import Flask, request
+from flask import Flask, request, render_template
 import pickle
-app = Flask(__name__)
+app = Flask(__name__, template_folder='pages/templates', static_folder='pages/static')
 
 
-async def send_back_to_discord_bot(state, code):
+async def communicate_with_ANZTbot(state, code):
     reader, writer = await asyncio.open_connection(
         "127.0.0.1", 7865)
 
@@ -17,12 +17,14 @@ async def send_back_to_discord_bot(state, code):
     writer.write_eof()
     await writer.drain()
 
-    result = (await reader.read()).decode()
+    result = await reader.read()
     addr = writer.get_extra_info('peername')
     print(f"Received {result!r} from {addr!r}")
     print("Closing connection")
     writer.close()
-    return result
+
+    result = pickle.loads(result)
+    return render_template('index.html', success=result['success'], message=result['message'])
 
 
 @app.route("/")
@@ -30,12 +32,11 @@ def hello():
     state = request.args.get('state')
     code = request.args.get('code')
     if None in [state, code]:
-        return "Incorrect arguments"
+        return render_template('index.html', success=False, message="Incorrect URL arguments")
     try:
-        result = asyncio.run(send_back_to_discord_bot(state, code))
-        return result
+        return asyncio.run(communicate_with_ANZTbot(state, code))
     except ConnectionRefusedError:
-        return "Couldn't communicate with discord bot"
+        return render_template('index.html', success=False, message="Couldn't communicate with ANZTbot")
 
 
 if __name__ == "__main__":
