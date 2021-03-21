@@ -4,6 +4,17 @@
 <p align=center><i>A Discord bot made for the ANZT Discord server to assist with the running of <a href="https://osu.ppy.sh/home">osu!</a> tournaments.</i></p>
 
 ## Features:
+### Tournament Registration System
+
+See [server/README.md](server/) for details about the web server and [`tourney-registering.py`](cogs/tourney-registering.py) for the cog that it communicates with.
+
+Allows users to sign up for tournaments by interacting with the bot.
+
+This uses osu!'s OAuth2 service and is used to link each user's osu! and discord accounts.<br>
+Previously we used Google Forms but this allowed people to sign up on behalf of others, regardless of their intention to play or not. In addition, form responses often contained human error.
+
+![GIF showing the process of signing up](images/signup.gif)
+
 ### Match result reporting
 See [`match-result-posting.py`](cogs/match-result-posting.py) for implementation.
 
@@ -24,15 +35,6 @@ See [`error-reporting.py`](cogs/error-reporting.py) for implementation.
 Pings a set user in a set channel for uncaught errors providing a full traceback and context.
 
 ![Screenshot of bot's message in discord](images/error-report.png)
-
-### Tournament Registration System
-
-See [server/README.md](server/) for details about the web server and [`tourney-registering.py`](cogs/tourney-registering.py) for the cog that it communicates with.
-
-Allows users to sign up for tournaments by interacting with the bot.
-
-This uses osu!'s OAuth2 service and is used to link each user's osu! and discord accounts.<br>
-Previously we used Google Forms but this allowed people to sign up on behalf of others, regardless of their intention to play or not. In addition, form responses often contained human error.
 
 ## Requirements
 See [`requirements.txt`](requirements.txt) for specific packages.
