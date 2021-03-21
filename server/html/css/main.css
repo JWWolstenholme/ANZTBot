@@ -30,6 +30,33 @@ p {
 }
 
 /* ===========================
+   Checkmark & cross stuff 
+   =========================== */
+
+.checkmark:after,
+.cross:after,
+.cross:before {
+	-webkit-animation-delay: 400ms;
+	animation-delay: 400ms;
+	-webkit-animation-duration: 1s;
+	animation-duration: 1s;
+	-webkit-animation-timing-function: ease;
+	animation-timing-function: ease;
+	-webkit-animation-fill-mode: forwards;
+	animation-fill-mode: forwards;
+	-webkit-transform-origin: left top;
+	transform-origin: left top;
+
+	opacity: 0;
+	height: 25px;
+	border-right: 6px solid white;
+	border-top: 6px solid white;
+	border-radius: 2.5px !important;
+	content: '';
+	position: absolute;
+}
+
+/* ===========================
    Checkmark stuff 
    =========================== */
 
@@ -38,31 +65,13 @@ p {
 }
 
 .checkmark:after {
-	-webkit-animation-delay: 400ms;
-	animation-delay: 400ms;
-	-webkit-animation-duration: 1s;
-	animation-duration: 1s;
-	-webkit-animation-timing-function: ease;
-	animation-timing-function: ease;
 	-webkit-animation-name: checkmark;
 	animation-name: checkmark;
 	-webkit-transform: scaleX(-1) rotate(135deg);
 	transform: scaleX(-1) rotate(135deg);
-	-webkit-animation-fill-mode: forwards;
-	animation-fill-mode: forwards;
-	-webkit-transform-origin: left top;
-	transform-origin: left top;
 
-	opacity: 0;
-	height: 25px;
-	width: 12.5px;
-	border-right: 6px solid white;
-	border-top: 6px solid white;
-	border-radius: 2.5px !important;
-	content: '';
 	left: 12.333333px;
 	top: 27px;
-	position: absolute;
 }
 
 @-webkit-keyframes checkmark {
@@ -121,26 +130,8 @@ p {
 
 .cross:after,
 .cross:before {
-	-webkit-animation-delay: 400ms;
-	animation-delay: 400ms;
-	-webkit-animation-duration: 1s;
-	animation-duration: 1s;
-	-webkit-animation-timing-function: ease;
-	animation-timing-function: ease;
 	-webkit-animation-name: cross;
 	animation-name: cross;
-	-webkit-animation-fill-mode: forwards;
-	animation-fill-mode: forwards;
-	-webkit-transform-origin: left top;
-	transform-origin: left top;
-
-	opacity: 0;
-	height: 25px;
-	border-right: 6px solid white;
-	border-top: 6px solid white;
-	border-radius: 2.5px !important;
-	content: '';
-	position: absolute;
 }
 
 .cross:after {
