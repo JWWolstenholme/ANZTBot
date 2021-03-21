@@ -49,8 +49,8 @@ p {
 
 	opacity: 0;
 	height: 25px;
-	border-right: 6px solid white;
-	border-top: 6px solid white;
+	border-right: 6px solid;
+	border-top: 6px solid;
 	border-radius: 2.5px !important;
 	content: '';
 	position: absolute;
@@ -72,6 +72,8 @@ p {
 
 	left: 12.333333px;
 	top: 27px;
+
+	border-color: greenyellow;
 }
 
 @-webkit-keyframes checkmark {
@@ -132,6 +134,8 @@ p {
 .cross:before {
 	-webkit-animation-name: cross;
 	animation-name: cross;
+
+	border-color: red;
 }
 
 .cross:after {
