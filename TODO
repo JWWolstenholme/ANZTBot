@@ -4,13 +4,15 @@ Todo:
     Registering feature:
       ☐ Remove print()'s and maybe replace with some form of logging
         Maybe log successful registrations in a discord channel for organisers
+      ☐ Add a way to see, and maybe communicate in the bot's dms
       Improve the user experience:
-        ☐ Improve the user feedback on http://osuanzt.com/register
+        ✔ Improve the user feedback on http://osuanzt.com/register @done(21-03-22 04:24)
           Design simple pages for:
-            ☐ Invalid URL parameters
-            ☐ Couldn't communicate with discord bot
-            ☐ Bot couldn't finish OAuth process
-            ☐ Successfully registered
+            These ended up just being one template used in a template engine
+            ✔ Invalid URL parameters @done(21-03-22 04:24)
+            ✔ Couldn't communicate with discord bot @done(21-03-22 04:24)
+            ✔ Bot couldn't finish OAuth process @done(21-03-22 04:24)
+            ✔ Successfully registered @done(21-03-22 04:24)
           ✔ Send whether or not the OAuth process was successfull back to the web server to give feedback to the user @done(21-03-16 07:39)
         ✔ Allow for the user to signify they want to register by either messaging the bot or reacting to a certain message @done(21-03-19 05:10)
         ✔ Use an embed to send the user the OAuth link so they don't see the ugly URL. @done(21-03-13 00:52)
