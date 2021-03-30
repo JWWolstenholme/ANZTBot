@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from settings import botToken
+from utility_funcs import get_setting
 
 initial_extensions = ['cogs.' + name for name in [
     'owner',
@@ -31,4 +31,4 @@ if __name__ == '__main__':
         except KeyError:
             return
 
-    bot.run(botToken)
+    bot.run(get_setting("discord.py", "bot_token"))

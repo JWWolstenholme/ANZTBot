@@ -1,15 +1,37 @@
 import asyncio
+import json
 import re
 
 from discord.ext import commands
 
 
-async def res_cog(bot):
+def res_cog(bot):
     cog_name = 'ResourcesCog'
 
     if cog := bot.get_cog(cog_name):
         return cog
     raise commands.ExtensionNotFound(cog_name)
+
+
+settings_file = 'settings.json'
+
+
+def _get_settings():
+    with open(settings_file, 'r') as f:
+        data = json.load(f)
+    return data
+
+
+def get_setting(category, setting=None):
+    data = _get_settings()
+    return data[category][setting] if setting else data[category]
+
+
+def set_setting(category, setting, value):
+    data = _get_settings()
+    data[category][setting] = value
+    with open(settings_file, 'w') as f:
+        json.dump(data, f, indent=4)
 
 
 def is_channel(*args: str):
@@ -29,7 +51,7 @@ def url_to_id(url: str) -> int:
 
 async def request(url: str, bot, headers: dict = {}) -> dict:
     '''Quick and dirty short-hand REST API grabber.'''
-    session = await (await res_cog(bot)).session()
+    session = await res_cog(bot).session()
     async with session.get(url, headers=headers) as r:
         if r.status != 200:
             raise Exception('External server returned status code other than 200')

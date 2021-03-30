@@ -1,11 +1,11 @@
 import asyncio
 from datetime import datetime
+from requests.api import get
 
 import twitch
 from discord import Embed, Streaming
 from discord.ext import commands, tasks
-from settings import clientID, clientSecret, twitchannel
-from utility_funcs import is_channel
+from utility_funcs import is_channel, get_setting
 
 
 class TwitchAndPickemsCog(commands.Cog):
@@ -13,7 +13,10 @@ class TwitchAndPickemsCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.client = twitch.TwitchHelix(client_id=clientID, client_secret=clientSecret, scopes=[twitch.constants.OAUTH_SCOPE_ANALYTICS_READ_EXTENSIONS])
+        setts = get_setting("twitch")
+        self.client = twitch.TwitchHelix(client_id=setts["client_id"],
+                                         client_secret=setts["client_secret"],
+                                         scopes=[twitch.constants.OAUTH_SCOPE_ANALYTICS_READ_EXTENSIONS])
         self.check_if_live.start()
 
     def cog_unload(self):
@@ -24,6 +27,8 @@ class TwitchAndPickemsCog(commands.Cog):
 
     @tasks.loop(seconds=22)
     async def check_if_live(self):
+        twitchannel = get_setting("twitch", "twitch_channel")
+
         try:
             if not self.bot.is_ready():
                 await self.bot.wait_until_ready()
