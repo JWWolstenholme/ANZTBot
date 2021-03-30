@@ -1,14 +1,13 @@
 import asyncio
 import pickle
 
-import aiohttp
-import asyncpg
 from cryptography.fernet import Fernet, InvalidToken
 from discord import Embed, User
 from discord.ext import commands
 from discord.ext.commands.converter import MessageConverter
 from discord.ext.commands.errors import MessageNotFound
 from settings import *
+from utility_funcs import res_cog
 
 
 class TourneySignupCog(commands.Cog):
@@ -16,13 +15,10 @@ class TourneySignupCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.session = aiohttp.ClientSession()
         self.prompted_users = []
 
-    def cog_unload(self):
-        loop = self.bot.loop
-        loop.create_task(self.connpool.close())
-        loop.create_task(self.session.close())
+    async def _connpool(self):
+        return await (await res_cog(self.bot)).connpool()
 
     @commands.command()
     async def register(self, ctx):
@@ -54,7 +50,7 @@ class TourneySignupCog(commands.Cog):
             return
 
         # Save to the database
-        async with self.connpool.acquire() as conn:
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 # We store the message id (which is unique per channel) and check it against reactions in all channels
                 # so there could be false postives with messages from other channels.
@@ -65,7 +61,7 @@ class TourneySignupCog(commands.Cog):
         await ctx.send(f'{ctx.author.mention} Now watching that message.', delete_after=self.delete_delay)
 
     async def load_from_settings(self):
-        async with self.connpool.acquire() as conn:
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 record = await conn.fetchrow('select * from settings')
                 self.watch_message_id = record['watch_message_link']
@@ -126,6 +122,8 @@ class TourneySignupCog(commands.Cog):
         addr = writer.get_extra_info('peername')
         print(f"Received {data!r} from {addr!r}")
 
+        session = await (await res_cog(self.bot)).session()
+
         # See https://osu.ppy.sh/docs/index.html?bash#authorization-code-grant to see what the rest of this method is doing.
         code = data['code']
         state = data['state']
@@ -148,7 +146,7 @@ class TourneySignupCog(commands.Cog):
             'redirect_uri': redirect_url
         }
         # There's duplicate code here but idk how to elegantly fix that
-        async with self.session.post('https://osu.ppy.sh/oauth/token', data=data) as r:
+        async with session.post('https://osu.ppy.sh/oauth/token', data=data) as r:
             if r.status != 200:
                 print('failed to get authorization token')
                 await self.write(writer, False, "Failed to reach osu! servers. Maybe they're down?")
@@ -158,7 +156,7 @@ class TourneySignupCog(commands.Cog):
 
         print('Got access token, using token to get user info')
         headers = {'Authorization': f'Bearer {access_token}'}
-        async with self.session.get('https://osu.ppy.sh/api/v2/me/osu', headers=headers) as r:
+        async with session.get('https://osu.ppy.sh/api/v2/me/osu', headers=headers) as r:
             if r.status != 200:
                 print('failed to get user info')
                 await self.write(writer, False, "Failed to reach osu! servers. Maybe they're down?")
@@ -178,13 +176,13 @@ class TourneySignupCog(commands.Cog):
         writer.close()
 
     async def check_if_registered(self, discord_id):
-        async with self.connpool.acquire() as conn:
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 result = await conn.fetchrow('''select discord_id from signups where discord_id=$1''', discord_id)
                 return bool(result)
 
     async def persist_signup(self, discord_id, osu_id):
-        async with self.connpool.acquire() as conn:
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 await conn.execute('''insert into signups values ($1, $2)''', discord_id, osu_id)
 
@@ -192,7 +190,6 @@ class TourneySignupCog(commands.Cog):
     async def on_ready(self):
         # Wait for error cog to be ready
         await asyncio.sleep(1)
-        self.connpool = await asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)
         await self.load_from_settings()
 
         server = await asyncio.start_server(self.handler, '127.0.0.1', 7865)
