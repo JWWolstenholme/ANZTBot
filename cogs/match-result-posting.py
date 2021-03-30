@@ -2,8 +2,7 @@ import re
 
 import discord
 from discord.ext import commands
-from settings import *
-from utility_funcs import is_channel, request, res_cog, url_to_id
+from utility_funcs import is_channel, request, res_cog, url_to_id, get_setting
 
 
 class MatchResultPostingCog(commands.Cog):
@@ -45,20 +44,26 @@ class MatchResultPostingCog(commands.Cog):
     @is_channel('organiser')
     async def settings(self, ctx):
         await ctx.message.delete()
+
+        setts = get_setting('match-result-posting')
+
         description = 'These settings relate to match result posting only.\n'
-        description += f'**Message Prefix:**```\n{tourneyRound}```'
-        description += f'**Staff sheet file name:**```\n{sheet_file_name}```'
-        description += f'**Schedule sheet name:**```\n{schedule_sheet_name}```'
-        description += f'**Mappool sheet offset:**\nUses the formula `D<3+25*offset>:F<2+25*(offset+1)>` to narrow down cells on the sheet named Mappool. eg. D53:F77```\n{poolRound}```'
+        description += f'**Message Prefix:**```\n{setts["tourney_round"]}```'
+        description += f'**Staff sheet file name:**```\n{setts["sheet_file_name"]}```'
+        description += f'**Schedule sheet name:**```\n{setts["schedule_sheet_name"]}```'
+        description += f'**Mappool sheet offset:**\nUses the formula `D<3+25*offset>:F<2+25*(offset+1)>` to narrow down cells on the sheet named Mappool. eg. D53:F77```\n{setts["pool_round"]}```'
         embed = discord.Embed(title='Settings', description=description, color=0xe47607)
         embed.set_footer(text=f'Replying to {ctx.author.display_name}')
         await ctx.send(embed=embed)
 
     async def post_result(self, message):
         async with message.channel.typing():
+            setts = get_setting('match-result-posting')
+            apiKey = get_setting('osu', 'apikey')
+
             # Get spreadsheet from google sheets
             agc = await res_cog(self.bot).agc()
-            sh = await agc.open(sheet_file_name)
+            sh = await agc.open(setts["sheet_file_name"])
 
             match_id = message.content.lstrip('!').upper()
             ws = await sh.worksheet(match_id)
@@ -133,11 +138,11 @@ class MatchResultPostingCog(commands.Cog):
                            f':flag_{p2["flag"]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
                            f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}, {p2["ban2"]}{p2_tb_ban}')
             embed = discord.Embed(title=f'Match ID: {match_id}', description=description, color=0xe47607)
-            embed.set_author(name=f'{tourneyRound}: ({p1["username"]}) vs ({p2["username"]})',
+            embed.set_author(name=f'{setts["tourney_round"]}: ({p1["username"]}) vs ({p2["username"]})',
                              url=f'https://osu.ppy.sh/mp/{lobby_id}')
 
             # Add streamer and referee to footer
-            ws = await sh.worksheet(schedule_sheet_name)
+            ws = await sh.worksheet(setts["schedule_sheet_name"])
             schedule_batch = (await ws.batch_get(['B5:I100']))[0]
             referee = ''
             streamer = ''
@@ -167,6 +172,7 @@ class MatchResultPostingCog(commands.Cog):
 
             # Get the mappool
             ws = await sh.worksheet('Mappool')
+            poolRound = setts['pool_round']
             cells = f'D{3+25*poolRound}:F{2+25*(poolRound+1)}'
             poolbatch = (await ws.batch_get([cells]))[0]
             pool = {}
@@ -190,7 +196,7 @@ class MatchResultPostingCog(commands.Cog):
                 bmapFormatted = f"{bmapJson['artist']} - {bmapJson['title']} [{bmapJson['version']}]"
 
                 # Filter out scores made by referees
-                scores = [score for score in game['scores'] if int(score['user_id']) not in referees]
+                scores = [score for score in game['scores'] if int(score['user_id']) not in setts["referees"]]
                 scores.sort(key=lambda score: int(score['score']), reverse=True)
                 # Retreive winner's username from osu api or cache
                 if scores[0]['user_id'] not in self.userID_username_cache.keys():

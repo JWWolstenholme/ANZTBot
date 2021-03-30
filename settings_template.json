@@ -1,0 +1,36 @@
+{
+    // Remove all comments before use otherwise this won't parse.
+    "discord.py": {
+        "bot_token": ""
+    },
+    "twitch": {
+        // Which twitch channel to monitor for changing the bot's presence and announcing streams
+        "twitch_channel": "osuanzt",
+        // Twitch application client ID and secret for making api calls
+        "client_id": "",
+        "client_secret": ""
+    },
+    "osu": {
+        "apikey": ""
+    },
+    "match-result-posting": {
+        // Shown to users to signify round in results. Recommend an acronym like RO16 or GS.
+        "tourney_round": "",
+        // Tells the bot which range of cells to look at for the current mappool, with our specific sheets
+        "pool_round": 6,
+        // The name of the ANZT7S spreadsheet that contains our referee's inputs
+        "sheet_file_name": "",
+        // The name of the worksheet within the spreadsheet defined above that contains the schedule for this week
+        "schedule_sheet_name": "",
+        // A list of referee Osu! user ids to ignore when looking at Osu! lobby scores
+        // This only matters if the reffs play and actually beat one of the players
+        "referees": []
+    },
+    "postgresql": {
+        "dbname": "",
+        "dbuser": "",
+        "dbpass": "",
+        "dbhost": "",
+        "dbport": ""
+    }
+}

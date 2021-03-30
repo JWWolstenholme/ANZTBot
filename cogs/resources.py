@@ -5,7 +5,7 @@ import asyncpg
 import gspread_asyncio
 from discord.ext import commands
 from google.oauth2.service_account import Credentials
-from settings import dbhost, dbname, dbpass, dbport, dbuser
+from utility_funcs import get_setting
 
 
 class ResourcesCog(commands.Cog):
@@ -18,7 +18,12 @@ class ResourcesCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.connection_pool = await asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)
+        setts = get_setting("postgresql")
+        self.connection_pool = await asyncpg.create_pool(database=setts["dbname"],
+                                                         user=setts["dbuser"],
+                                                         password=setts["dbpass"],
+                                                         host=setts["dbhost"],
+                                                         port=setts["dbport"])
 
     def cog_unload(self):
         loop = self.bot.loop
