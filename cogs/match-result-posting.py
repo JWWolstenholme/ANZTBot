@@ -1,8 +1,9 @@
+import re
+
 import discord
 from discord.ext import commands
-import re
-from utility_funcs import url_to_id, is_channel, request, res_cog
 from settings import *
+from utility_funcs import is_channel, request, res_cog, url_to_id
 
 
 class MatchResultPostingCog(commands.Cog):

@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+
 from settings import botToken
 
 initial_extensions = ['cogs.' + name for name in [
