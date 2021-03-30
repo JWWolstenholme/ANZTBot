@@ -1,6 +1,6 @@
 from discord.ext import commands, tasks
 from discord import Embed, Streaming
-from resources import is_channel
+from utility_funcs import is_channel
 from settings import twitchannel, clientID, clientSecret
 import twitch
 import asyncio

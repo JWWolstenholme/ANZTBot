@@ -1,4 +1,3 @@
 settings.py
 client_secret.json
 last_stream_start.txt
-query scratchpad.postgres

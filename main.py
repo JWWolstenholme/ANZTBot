@@ -1,17 +1,16 @@
 import discord
 from discord.ext import commands
-import resources
 from settings import botToken
 
 initial_extensions = ['cogs.' + name for name in [
     'owner',
-    'match-result-posting',
     'error-reporting',
+    'resources',
+    'match-result-posting',
     'twitch-pickem'
 ]]
 
 if __name__ == '__main__':
-    resources.init()
     bot = commands.Bot(command_prefix='!')
     for extension in initial_extensions:
         bot.load_extension(extension)

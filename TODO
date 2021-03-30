@@ -1,7 +1,7 @@
 // Created with Todo+ VSCode extension  
 Todo: 
   Improvements:
-    ☐ Utilise a resources cog to store and share resources that need to be used in multiple cogs, eg. database connection
+    ✔ Utilise a resources cog to store and share resources that need to be used in multiple cogs, eg. database connection @done(21-03-31 01:02)
       Undecided as to whether to include utility functions like those found in resources.py  
     ☐ Check if stream is live using webhooks instead of REST calls
     ☐ Allow reporting of forfeited matches
