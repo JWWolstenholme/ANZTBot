@@ -26,6 +26,22 @@
         // This only matters if the reffs play and actually beat one of the players
         "referees": []
     },
+    "tourney-signup": {
+        // Cryptographic key used in Fernet encryption https://cryptography.io/en/latest/fernet.html
+        // Used to prevent users from impersonating other discord users in the OAuth process
+        "key": "",
+        // OAuth stuff
+        "osu_app_client_id": "",
+        "osu_app_client_secret": "",
+        "redirect_url": "https://osuanzt.com/register/",
+        // Displayed to users when sent their signup link
+        "signup_close_date": "",
+        "forum_post_url": "https://osu.ppy.sh/community/forums/topics/1204722",
+        "allowed_countries": [
+            "NZ",
+            "AU"
+        ]
+    },
     "postgresql": {
         "dbname": "",
         "dbuser": "",
