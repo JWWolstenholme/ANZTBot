@@ -1,8 +1,9 @@
+import re
+
 import discord
 from discord.ext import commands
-import re
-from resources import url_to_id, is_channel, agcm, request
 from settings import *
+from utility_funcs import is_channel, request, res_cog, url_to_id
 
 
 class MatchResultPostingCog(commands.Cog):
@@ -56,7 +57,7 @@ class MatchResultPostingCog(commands.Cog):
     async def post_result(self, message):
         async with message.channel.typing():
             # Get spreadsheet from google sheets
-            agc = await agcm.authorize()
+            agc = await (await res_cog(self.bot)).agc()
             sh = await agc.open(sheet_file_name)
 
             match_id = message.content.lstrip('!').upper()
@@ -71,7 +72,7 @@ class MatchResultPostingCog(commands.Cog):
                 return
 
             # Get lobby info with osu api
-            lobbyjson = await request(f'https://osu.ppy.sh/api/get_match?k={apiKey}&mp={lobby_id}')
+            lobbyjson = await request(f'https://osu.ppy.sh/api/get_match?k={apiKey}&mp={lobby_id}', self.bot)
             if lobbyjson['match'] == 0:
                 await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) returned no results for match: {match_id}', delete_after=self.delete_delay)
                 return
@@ -99,7 +100,7 @@ class MatchResultPostingCog(commands.Cog):
             # Retreive player's flags from api or cache
             # Duplicate code, I know
             if p1['username'] not in self.username_flag_cache.keys():
-                json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={p1["username"]}&m=0&type=string')
+                json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={p1["username"]}&m=0&type=string', self.bot)
                 flag = json[0]['country'].lower()
                 self.username_flag_cache[p1['username']] = flag
             else:
@@ -107,7 +108,7 @@ class MatchResultPostingCog(commands.Cog):
             p1['flag'] = flag
 
             if p2['username'] not in self.username_flag_cache.keys():
-                json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={p2["username"]}&m=0&type=string')
+                json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={p2["username"]}&m=0&type=string', self.bot)
                 flag = json[0]['country'].lower()
                 self.username_flag_cache[p2['username']] = flag
             else:
@@ -182,7 +183,7 @@ class MatchResultPostingCog(commands.Cog):
                 bmapID = int(game['beatmap_id'])
                 # Retreive beatmap information from osu api or cache
                 if bmapID not in self.bmapID_json_cache.keys():
-                    bmapJson = await request(f'https://osu.ppy.sh/api/get_beatmaps?k={apiKey}&b={bmapID}')
+                    bmapJson = await request(f'https://osu.ppy.sh/api/get_beatmaps?k={apiKey}&b={bmapID}', self.bot)
                     bmapJson = bmapJson[0]
                     self.bmapID_json_cache[bmapID] = bmapJson
                 else:
@@ -194,7 +195,7 @@ class MatchResultPostingCog(commands.Cog):
                 scores.sort(key=lambda score: int(score['score']), reverse=True)
                 # Retreive winner's username from osu api or cache
                 if scores[0]['user_id'] not in self.userID_username_cache.keys():
-                    winnerjson = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={scores[0]["user_id"]}')
+                    winnerjson = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={scores[0]["user_id"]}', self.bot)
                     winner = winnerjson[0]['username']
                     self.userID_username_cache[scores[0]['user_id']] = winner
                 else:

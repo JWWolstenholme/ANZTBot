@@ -1,10 +1,11 @@
-from discord.ext import commands, tasks
-from discord import Embed, Streaming
-from resources import is_channel
-from settings import twitchannel, clientID, clientSecret
-import twitch
 import asyncio
 from datetime import datetime
+
+import twitch
+from discord import Embed, Streaming
+from discord.ext import commands, tasks
+from settings import clientID, clientSecret, twitchannel
+from utility_funcs import is_channel
 
 
 class TwitchAndPickemsCog(commands.Cog):
