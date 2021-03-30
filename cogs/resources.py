@@ -15,7 +15,10 @@ class ResourcesCog(commands.Cog):
 
         self.requests_session = aiohttp.ClientSession()
         self.agcm = gspread_asyncio.AsyncioGspreadClientManager(self._get_creds)
-        self.connection_pool = asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.connection_pool = await asyncpg.create_pool(database=dbname, user=dbuser, password=dbpass, host=dbhost, port=dbport)
 
     def cog_unload(self):
         loop = self.bot.loop
