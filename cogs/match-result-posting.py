@@ -57,7 +57,7 @@ class MatchResultPostingCog(commands.Cog):
     async def post_result(self, message):
         async with message.channel.typing():
             # Get spreadsheet from google sheets
-            agc = await (await res_cog(self.bot)).agc()
+            agc = await res_cog(self.bot).agc()
             sh = await agc.open(sheet_file_name)
 
             match_id = message.content.lstrip('!').upper()

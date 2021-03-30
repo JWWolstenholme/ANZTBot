@@ -4,7 +4,7 @@ import re
 from discord.ext import commands
 
 
-async def res_cog(bot):
+def res_cog(bot):
     cog_name = 'ResourcesCog'
 
     if cog := bot.get_cog(cog_name):
@@ -29,7 +29,7 @@ def url_to_id(url: str) -> int:
 
 async def request(url: str, bot, headers: dict = {}) -> dict:
     '''Quick and dirty short-hand REST API grabber.'''
-    session = await (await res_cog(bot)).session()
+    session = await res_cog(bot).session()
     async with session.get(url, headers=headers) as r:
         if r.status != 200:
             raise Exception('External server returned status code other than 200')
