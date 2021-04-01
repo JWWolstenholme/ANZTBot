@@ -49,8 +49,8 @@ class MatchResultPostingCog(commands.Cog):
 
         description = 'These settings relate to match result posting only.\n'
         description += f'**Message Prefix:**```\n{setts["tourney_round"]}```'
-        description += f'**Staff sheet file name:**```\n{setts["sheet_file_name"]}```'
-        description += f'**Schedule sheet name:**```\n{setts["schedule_sheet_name"]}```'
+        description += f'**Staff sheet:**```\n[Link]({setts["sheet_url"]})```'
+        description += f'**Schedule sheet name:**```\n{setts["sheet_tab_name"]}```'
         description += f'**Mappool sheet offset:**\nUses the formula `D<3+25*offset>:F<2+25*(offset+1)>` to narrow down cells on the sheet named Mappool. eg. D53:F77```\n{setts["pool_round"]}```'
         embed = discord.Embed(title='Settings', description=description, color=0xe47607)
         embed.set_footer(text=f'Replying to {ctx.author.display_name}')
@@ -63,7 +63,7 @@ class MatchResultPostingCog(commands.Cog):
 
             # Get spreadsheet from google sheets
             agc = await res_cog(self.bot).agc()
-            sh = await agc.open(setts["sheet_file_name"])
+            sh = await agc.open_by_url(setts["sheet_url"])
 
             match_id = message.content.lstrip('!').upper()
             ws = await sh.worksheet(match_id)
@@ -143,7 +143,7 @@ class MatchResultPostingCog(commands.Cog):
                              url=f'https://osu.ppy.sh/mp/{lobby_id}')
 
             # Add streamer and referee to footer
-            ws = await sh.worksheet(setts["schedule_sheet_name"])
+            ws = await sh.worksheet(setts["sheet_tab_name"])
             schedule_batch = (await ws.batch_get(['B5:I100']))[0]
             referee = ''
             streamer = ''
