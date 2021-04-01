@@ -60,7 +60,7 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
         await self.bot.logout()
 
     @commands.command()
-    @is_channel('organiser', 'bot-log')
+    @commands.has_permissions(administrator=True)
     async def settings(self, ctx):
         data = _get_settings()
 
@@ -77,7 +77,7 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
         await ctx.send(embed=embed)
 
     @commands.command()
-    @is_channel('organiser', 'bot-log')
+    @commands.has_permissions(administrator=True)
     async def set(self, ctx, category, setting, value):
         try:
             if set_exposed_setting(category, setting, value):

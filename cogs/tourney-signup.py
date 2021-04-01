@@ -3,7 +3,7 @@ import pickle
 from datetime import datetime
 
 from cryptography.fernet import Fernet, InvalidToken
-from discord import Embed, User
+from discord import Embed, File, User
 from discord.ext import commands
 from discord.ext.commands.converter import MessageConverter
 from discord.ext.commands.errors import MessageNotFound
@@ -207,6 +207,18 @@ class TourneySignupCog(commands.Cog):
         osu_username = json[0]['username']
 
         await ws.append_row([datetime.now().strftime('%d/%m/%Y %H:%M:%S'), discord_id, str(disc_user), disc_user.display_name, osu_id, osu_username])
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def csv(self, ctx):
+        await ctx.message.delete()
+
+        filename = 'signups.csv'
+        async with (await self._connpool()).acquire() as conn:
+            async with conn.transaction():
+                await conn.copy_from_query('select * from signups', output=filename, format='csv', header=True)
+        with open(filename, 'rb') as fp:
+            await ctx.send(file=File(fp, filename))
 
     @commands.Cog.listener()
     async def on_ready(self):
