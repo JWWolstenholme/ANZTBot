@@ -24,14 +24,44 @@ def _get_settings():
 
 def get_setting(category, setting=None):
     data = _get_settings()
-    return data[category][setting] if setting else data[category]
+    category = data[category]
+    if not setting:
+        return category
+
+    return category['exposed_settings'][setting] if 'exposed_settings' in category else category[setting]
 
 
-def set_setting(category, setting, value):
+def get_exposed_settings(category):
     data = _get_settings()
-    data[category][setting] = value
+    category = data[category]
+
+    return category['exposed_settings'] if 'exposed_settings' in category else {}
+
+
+def set_setting(category, setting, value, exposed=False):
+    # Convert value to an int if possible
+    try:
+        value = int(value)
+    except ValueError:
+        pass
+
+    data = _get_settings()
+
+    if exposed:
+        data[category]['exposed_settings'][setting] = value
+    else:
+        data[category][setting] = value
+
     with open(settings_file, 'w') as f:
         json.dump(data, f, indent=4)
+
+
+def set_exposed_setting(category, setting, value):
+    exposed_settings = get_exposed_settings(category)
+    if setting in exposed_settings:
+        set_setting(category, setting, value, exposed=True)
+        return True
+    return False
 
 
 def is_channel(*args: str):
