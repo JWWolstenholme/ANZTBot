@@ -13,7 +13,9 @@ initial_extensions = ['cogs.' + name for name in [
 ]]
 
 if __name__ == '__main__':
-    bot = commands.Bot(command_prefix='!')
+    intents = discord.Intents.default()
+    intents.members = True
+    bot = commands.Bot(command_prefix='!', intents=intents)
     for extension in initial_extensions:
         bot.load_extension(extension)
         print(f'Loaded \'{extension}\'')

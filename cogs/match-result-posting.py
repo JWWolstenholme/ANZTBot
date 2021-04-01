@@ -2,7 +2,8 @@ import re
 
 import discord
 from discord.ext import commands
-from utility_funcs import is_channel, request, res_cog, url_to_id, get_setting
+from gspread.exceptions import APIError
+from utility_funcs import get_setting, is_channel, request, res_cog, url_to_id
 
 
 class MatchResultPostingCog(commands.Cog):
@@ -47,7 +48,12 @@ class MatchResultPostingCog(commands.Cog):
 
             # Get spreadsheet from google sheets
             agc = await res_cog(self.bot).agc()
-            sh = await agc.open_by_url(setts["sheet_url"])
+            try:
+                sh = await agc.open_by_url(setts["sheet_url"])
+            except APIError as e:
+                if e.args[0]['status'] == 'PERMISSION_DENIED':
+                    await message.channel.send(f'{message.author.mention} I don\'t have permission to view that sheet. Share it with `anzt-bot@anzt-bot.iam.gserviceaccount.com` to give me access.', delete_after=self.delete_delay*2)
+                return
 
             match_id = message.content.lstrip('!').upper()
             ws = await sh.worksheet(match_id)

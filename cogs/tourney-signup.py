@@ -1,12 +1,14 @@
 import asyncio
 import pickle
+from datetime import datetime
 
 from cryptography.fernet import Fernet, InvalidToken
 from discord import Embed, User
 from discord.ext import commands
 from discord.ext.commands.converter import MessageConverter
 from discord.ext.commands.errors import MessageNotFound
-from utility_funcs import get_setting, res_cog
+from gspread.exceptions import APIError
+from utility_funcs import get_setting, request, res_cog
 
 
 class TourneySignupCog(commands.Cog):
@@ -183,9 +185,28 @@ class TourneySignupCog(commands.Cog):
                 return bool(result)
 
     async def persist_signup(self, discord_id, osu_id):
+        # Persist in database
         async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 await conn.execute('''insert into signups values ($1, $2)''', discord_id, osu_id)
+
+        # Persist in spreadsheet
+        agc = await res_cog(self.bot).agc()
+        try:
+            sh = await agc.open_by_url('https://docs.google.com/spreadsheets/d/1dYN6A83NAZxLYpESHiQR2khkqqoNUh5nlrYt_vgj-vI')
+        except APIError as e:
+            if e.args[0]['status'] == 'PERMISSION_DENIED':
+                print('no perms. share with anzt-bot@anzt-bot.iam.gserviceaccount.com')
+            return
+        ws = await sh.worksheet('Signups')
+
+        disc_user = self.bot.get_user(int(discord_id))
+
+        apiKey = get_setting('osu', 'apikey')
+        json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={osu_id}&type=id', self.bot)
+        osu_username = json[0]['username']
+
+        await ws.append_row([datetime.now().strftime('%d/%m/%Y %H:%M:%S'), discord_id, str(disc_user), disc_user.display_name, osu_id, osu_username])
 
     @commands.Cog.listener()
     async def on_ready(self):
