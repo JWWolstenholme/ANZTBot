@@ -6,6 +6,7 @@ Todo:
         Maybe log successful registrations in a discord channel for organisers
       ✘ Add a way to see, and maybe communicate in the bot's dms @cancelled(21-04-02 07:58)
       ☐ Add a method for staff to sign up
+      ☐ Find an alternative to asyncio.run() in server.py. It works but it's not ideal
       Improve the user experience:
         ✔ Improve the user feedback on http://osuanzt.com/register @done(21-03-22 04:24)
           Design simple pages for:

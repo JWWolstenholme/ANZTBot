@@ -34,6 +34,7 @@ def hello():
     if None in [state, code]:
         return render_template('index.html', success=False, message="Incorrect URL arguments")
     try:
+        # Using async here is bad practice. A library like https://pypi.org/project/Quart/ would be more suitable.
         return asyncio.run(communicate_with_ANZTbot(state, code))
     except ConnectionRefusedError:
         return render_template('index.html', success=False, message="Couldn't communicate with ANZTbot")
