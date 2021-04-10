@@ -1,5 +1,6 @@
 asyncpg==0.22.0
 discord.py==1.6.0
+cryptography==3.4.6
 gspread-asyncio==1.4.0
 pycodestyle==2.7.0
 python-twitch-client==0.7.1

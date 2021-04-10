@@ -1,3 +1,4 @@
+-- This was the schema used while qualifiers.py was in use. Before it was retired to a cog.
 create table players (
     osu_id numeric(14) primary key,
     osu_username text,

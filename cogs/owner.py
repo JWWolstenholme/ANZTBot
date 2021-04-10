@@ -1,4 +1,6 @@
+from discord import Embed
 from discord.ext import commands
+from utility_funcs import _get_settings, is_channel, set_exposed_setting
 
 
 class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
@@ -56,6 +58,34 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.is_owner()
     async def logout(self, ctx):
         await self.bot.logout()
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def settings(self, ctx):
+        data = _get_settings()
+
+        description = ''
+        for category in data:
+            if 'exposed_settings' in data[category]:
+                description += f'**{category}**\n```'
+                for setting in data[category]['exposed_settings']:
+                    description += f'{setting} = {data[category]["exposed_settings"][setting]}\n'
+                description += '```'
+
+        embed = Embed(title='Settings', description=description, color=0xe47607)
+        embed.set_footer(text=f'Replying to {ctx.author.display_name}')
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def set(self, ctx, category, setting, value):
+        try:
+            if set_exposed_setting(category, setting, value):
+                await ctx.send(f'{ctx.author.mention} Done', delete_after=self.delete_delay)
+            else:
+                await ctx.send(f'{ctx.author.mention} That setting couldn\'t be set. It might not exist.', delete_after=self.delete_delay)
+        except Exception:
+            await ctx.send(f'{ctx.author.mention} There was an error setting that setting.', delete_after=self.delete_delay)
 
 
 def setup(bot):

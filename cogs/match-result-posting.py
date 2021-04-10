@@ -2,7 +2,8 @@ import re
 
 import discord
 from discord.ext import commands
-from utility_funcs import is_channel, request, res_cog, url_to_id, get_setting
+from gspread.exceptions import APIError
+from utility_funcs import get_setting, is_channel, request, res_cog, url_to_id
 
 
 class MatchResultPostingCog(commands.Cog):
@@ -40,22 +41,6 @@ class MatchResultPostingCog(commands.Cog):
                 await message.delete()
                 break
 
-    @commands.command()
-    @is_channel('organiser')
-    async def settings(self, ctx):
-        await ctx.message.delete()
-
-        setts = get_setting('match-result-posting')
-
-        description = 'These settings relate to match result posting only.\n'
-        description += f'**Message Prefix:**```\n{setts["tourney_round"]}```'
-        description += f'**Staff sheet file name:**```\n{setts["sheet_file_name"]}```'
-        description += f'**Schedule sheet name:**```\n{setts["schedule_sheet_name"]}```'
-        description += f'**Mappool sheet offset:**\nUses the formula `D<3+25*offset>:F<2+25*(offset+1)>` to narrow down cells on the sheet named Mappool. eg. D53:F77```\n{setts["pool_round"]}```'
-        embed = discord.Embed(title='Settings', description=description, color=0xe47607)
-        embed.set_footer(text=f'Replying to {ctx.author.display_name}')
-        await ctx.send(embed=embed)
-
     async def post_result(self, message):
         async with message.channel.typing():
             setts = get_setting('match-result-posting')
@@ -63,7 +48,12 @@ class MatchResultPostingCog(commands.Cog):
 
             # Get spreadsheet from google sheets
             agc = await res_cog(self.bot).agc()
-            sh = await agc.open(setts["sheet_file_name"])
+            try:
+                sh = await agc.open_by_url(setts["sheet_url"])
+            except APIError as e:
+                if e.args[0]['status'] == 'PERMISSION_DENIED':
+                    await message.channel.send(f'{message.author.mention} I don\'t have permission to view that sheet. Share it with `anzt-bot@anzt-bot.iam.gserviceaccount.com` to give me access.', delete_after=self.delete_delay*2)
+                return
 
             match_id = message.content.lstrip('!').upper()
             ws = await sh.worksheet(match_id)
@@ -87,14 +77,14 @@ class MatchResultPostingCog(commands.Cog):
 
             batch = (await ws.batch_get(['B2:M5']))[0]
             # Gather info together from sheet
-            # syntax is batch[row][col] relative to the range B2:L5
+            # syntax is batch[row][col] relative to the range B2:M5
             p1 = {'username': batch[0][4], 'score': batch[1][4], 'ban1': batch[1][9][0:3], 'ban2': batch[1][10][0:3], 'roll': batch[2][4]}
             p2 = {'username': batch[0][6], 'score': batch[1][6], 'ban1': batch[2][9][0:3], 'ban2': batch[2][10][0:3], 'roll': batch[2][6]}
             if '' in p1.values() or '' in p2.values():
                 await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
                                            f'or both players on the sheet for match: {match_id}', delete_after=self.delete_delay)
                 return
-            # Used to line up the scores vertically by left justifying the username to this amount
+            # Used to line up the scores horizontally by left justifying the username to this amount
             longest_name_len = len(max([p1['username'], p2['username']], key=len))
             # Highlight who the winner was using bold and an emoji
             if p1['score'] > p2['score']:
@@ -103,6 +93,7 @@ class MatchResultPostingCog(commands.Cog):
                 p2['score'] = f'**{p2["score"]}** :trophy:'
 
             # Retreive player's flags from api or cache
+            # Duplicate code, I know
             if p1['username'] not in self.username_flag_cache.keys():
                 json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={p1["username"]}&m=0&type=string', self.bot)
                 flag = json[0]['country'].lower()
@@ -142,7 +133,7 @@ class MatchResultPostingCog(commands.Cog):
                              url=f'https://osu.ppy.sh/mp/{lobby_id}')
 
             # Add streamer and referee to footer
-            ws = await sh.worksheet(setts["schedule_sheet_name"])
+            ws = await sh.worksheet(setts["sheet_tab_name"])
             schedule_batch = (await ws.batch_get(['B5:I100']))[0]
             referee = ''
             streamer = ''
@@ -236,7 +227,6 @@ class MatchResultPostingCog(commands.Cog):
                 except Exception:
                     continue
             else:
-
                 await message.channel.send(f'{message.author.mention} Couldn\'t post to the results channel for some reason. ping diony', delete_after=self.delete_delay)
 
 
