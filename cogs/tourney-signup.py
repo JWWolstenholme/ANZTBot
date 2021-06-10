@@ -27,6 +27,12 @@ class TourneySignupCog(commands.Cog):
         if await self.prompt_user(ctx.author):
             await ctx.message.add_reaction('✅')
 
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def clearcache(self, ctx):
+        self.prompted_users = []
+        await ctx.message.delete()
+
     async def user_prompted(self, user_id):
         return user_id in self.prompted_users
 
