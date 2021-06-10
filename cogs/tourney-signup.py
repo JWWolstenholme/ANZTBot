@@ -4,6 +4,7 @@ from datetime import datetime
 
 from cryptography.fernet import Fernet, InvalidToken
 from discord import Embed, File, User
+from discord.errors import Forbidden
 from discord.ext import commands
 from discord.ext.commands.converter import MessageConverter
 from discord.ext.commands.errors import MessageNotFound
@@ -94,7 +95,18 @@ class TourneySignupCog(commands.Cog):
 
         embed = Embed(title="Click here to register for ANZT8W", colour=colour, url=oauth_url)
         embed.set_footer(text=f"This link is unique to you - Registrations close {setts['signup_close_date']}")
-        await user.send(embed=embed)
+
+        try:
+            await user.send(embed=embed)
+        except Forbidden:
+            anztguild = self.bot.get_guild(199158455888642048)
+            botchannel = anztguild.get_channel(681098070393487409)
+            embed = Embed(colour=0xFF253F, url='https://support.discord.com/hc/en-us/articles/217916488-Blocking-Privacy-Settings-',
+                          description='You have private messages disabled so I couldn\'t give you your signup link.\n'
+                          'You can enable them in the settings under: ```Privacy & Safety > Allow direct messages from server members```'
+                          'Then try to register again.')
+            await botchannel.send(f'{user.mention}', embed=embed)
+            return False
 
         embed = Embed(colour=colour,
                       description="```fix\nYou will be prompted to log in on the official osu! site.\n\n"
