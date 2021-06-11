@@ -4,6 +4,7 @@ from datetime import datetime
 
 from cryptography.fernet import Fernet, InvalidToken
 from discord import Embed, File, User
+from discord.errors import Forbidden
 from discord.ext import commands
 from discord.ext.commands.converter import MessageConverter
 from discord.ext.commands.errors import MessageNotFound
@@ -21,11 +22,33 @@ class TourneySignupCog(commands.Cog):
     async def _connpool(self):
         return await res_cog(self.bot).connpool()
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        '''Deletes unnesecary messages in the registration channel'''
+        if message.author == self.bot.user:
+            return
+        if message.channel.name in ['register']:
+            if message.content != '!register':
+                await message.delete()
+                return
+
     @commands.command()
     async def register(self, ctx):
         # If user was prompted.
         if await self.prompt_user(ctx.author):
             await ctx.message.add_reaction('✅')
+        else:
+            await ctx.message.add_reaction('❌')
+            await ctx.send(f'{ctx.author.mention} I\'ve already sent you a dm', delete_after=10)
+        await asyncio.sleep(10)
+        await ctx.message.delete()
+
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def clearcache(self, ctx):
+        self.prompted_users = []
+        await ctx.message.delete()
 
     async def user_prompted(self, user_id):
         return user_id in self.prompted_users
@@ -79,6 +102,7 @@ class TourneySignupCog(commands.Cog):
         )
 
     async def prompt_user(self, user: User):
+        '''Returns a boolean indicating if the user has been prompted or not'''
         if await self.user_prompted(user.id):
             return False
 
@@ -88,7 +112,18 @@ class TourneySignupCog(commands.Cog):
 
         embed = Embed(title="Click here to register for ANZT8W", colour=colour, url=oauth_url)
         embed.set_footer(text=f"This link is unique to you - Registrations close {setts['signup_close_date']}")
-        await user.send(embed=embed)
+
+        try:
+            await user.send(embed=embed)
+        except Forbidden:
+            anztguild = self.bot.get_guild(199158455888642048)
+            botchannel = anztguild.get_channel(681098070393487409)
+            embed = Embed(colour=0xFF253F, url='https://support.discord.com/hc/en-us/articles/217916488-Blocking-Privacy-Settings-',
+                          description='You have private messages disabled so I couldn\'t give you your signup link.\n'
+                          'You can enable them in the settings under: ```Privacy & Safety > Allow direct messages from server members```'
+                          'Then try to register again.')
+            await botchannel.send(f'{user.mention}', embed=embed)
+            return False
 
         embed = Embed(colour=colour,
                       description="```fix\nYou will be prompted to log in on the official osu! site.\n\n"
