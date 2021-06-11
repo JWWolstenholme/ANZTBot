@@ -22,11 +22,27 @@ class TourneySignupCog(commands.Cog):
     async def _connpool(self):
         return await res_cog(self.bot).connpool()
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        '''Deletes unnesecary messages in the registration channel'''
+        if message.author == self.bot.user:
+            return
+        if message.channel.name in ['register']:
+            if message.content != '!register':
+                await message.delete()
+                return
+
     @commands.command()
     async def register(self, ctx):
         # If user was prompted.
         if await self.prompt_user(ctx.author):
             await ctx.message.add_reaction('✅')
+        else:
+            await ctx.message.add_reaction('❌')
+            await ctx.send(f'{ctx.author.mention} I\'ve already sent you a dm', delete_after=10)
+        await asyncio.sleep(10)
+        await ctx.message.delete()
+
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -86,6 +102,7 @@ class TourneySignupCog(commands.Cog):
         )
 
     async def prompt_user(self, user: User):
+        '''Returns a boolean indicating if the user has been prompted or not'''
         if await self.user_prompted(user.id):
             return False
 
