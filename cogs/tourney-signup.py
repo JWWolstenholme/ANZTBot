@@ -128,7 +128,7 @@ class TourneySignupCog(commands.Cog):
         embed = Embed(colour=colour,
                       description="```fix\nYou will be prompted to log in on the official osu! site.\n\n"
                                   "This lets us confirm you are the owner of these Discord and osu! accounts.```"
-                                  "*[Forum Post](https://osu.ppy.sh/community/forums/topics/1204722) - "
+                                  "*[Forum Post](https://osu.ppy.sh/community/forums/topics/1346048) - "
                                   "[Source](https://github.com/JWWolstenholme/ANZTBot) - by Diony*")
         await user.send(embed=embed)
         self.prompted_users.append(user.id)
