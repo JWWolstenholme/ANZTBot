@@ -43,7 +43,6 @@ class TourneySignupCog(commands.Cog):
         await asyncio.sleep(10)
         await ctx.message.delete()
 
-
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def clearcache(self, ctx):

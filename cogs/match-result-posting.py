@@ -2,13 +2,15 @@ import re
 
 import discord
 from discord.ext import commands
+from discord.ext.commands.converter import MessageConverter
+from discord.ext.commands.errors import MessageNotFound
 from gspread.exceptions import APIError
 from utility_funcs import get_setting, is_channel, request, res_cog, url_to_id
 
 
 class MatchResultPostingCog(commands.Cog):
     delete_delay = 10
-    match_id_format = '[0-9]+'
+    match_id_format = '[A-H][0-9]+'
     old_trigger = re.compile(f'^{match_id_format}$', re.IGNORECASE)
     new_trigger = re.compile(f'^!{match_id_format}$', re.IGNORECASE)
     userID_username_cache = {}
@@ -27,7 +29,7 @@ class MatchResultPostingCog(commands.Cog):
             if re.match(self.new_trigger, message.content):
                 async with message.channel.typing():
                     await message.delete()
-                    await self.post_result(message)
+                    await self.post_result(message, message.content.lstrip('!').upper())
             if re.match(self.old_trigger, message.content):
                 async with message.channel.typing():
                     await message.reply('Command has been updated. Use an exclamation mark before the ID to trigger it e.g. !F8', delete_after=self.delete_delay)
@@ -41,9 +43,35 @@ class MatchResultPostingCog(commands.Cog):
                 await message.delete()
                 break
 
-    async def post_result(self, message):
+    @commands.command()
+    @is_channel('referee', 'match-results')
+    async def edit(self, ctx, match_id, oldmessage):
+        await ctx.message.delete()
+
+        # Find the message to edit
+        try:
+            oldmessage = await MessageConverter().convert(ctx, oldmessage)
+        except MessageNotFound:
+            await ctx.send("Couldn't find a message with what you provided.", delete_after=self.delete_delay)
+            return
+
+        # Check if the bot can edit the message
+        if oldmessage.author != self.bot.user:
+            await ctx.send(f'{ctx.author.mention} I didn\'t post that message. I can\'t edit it.', delete_after=self.delete_delay)
+            return
+
+        # Check if match_id is valid
+        if re.match(self.match_id_format, match_id):
+            await ctx.send(f'{ctx.author.mention} That isn\'t a valid match id.', delete_after=self.delete_delay)
+            return
+
+        await self.post_result(ctx.message, match_id.upper(), oldmessage)
+
+    async def post_result(self, message, match_id, oldmessage=None):
         async with message.channel.typing():
             setts = get_setting('match-result-posting')
+            referees = setts['referees']
+            setts = setts['exposed_settings']
             apiKey = get_setting('osu', 'apikey')
 
             # Get spreadsheet from google sheets
@@ -55,12 +83,11 @@ class MatchResultPostingCog(commands.Cog):
                     await message.channel.send(f'{message.author.mention} I don\'t have permission to view that sheet. Share it with `anzt-bot@anzt-bot.iam.gserviceaccount.com` to give me access.', delete_after=self.delete_delay*2)
                 return
 
-            match_id = message.content.lstrip('!').upper()
             ws = await sh.worksheet(match_id)
 
             # Get lobby id from sheet
             try:
-                urlcell = await ws.acell('C4')
+                urlcell = await ws.acell('G4')
                 lobby_id = url_to_id(urlcell.value)
             except (SyntaxError, IndexError):
                 await message.channel.send(f'{message.author.mention} Couldn\'t find a valid mp link on the sheet for match: {match_id}', delete_after=self.delete_delay)
@@ -75,11 +102,11 @@ class MatchResultPostingCog(commands.Cog):
             #     await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) looks to be incomplete. Use !mp close', delete_after=self.delete_delay)
             #     return
 
-            batch = (await ws.batch_get(['B2:M5']))[0]
+            batch = (await ws.batch_get(['B2:D17']))[0]
             # Gather info together from sheet
-            # syntax is batch[row][col] relative to the range B2:M5
-            p1 = {'username': batch[0][4], 'score': batch[1][4], 'ban1': batch[1][9][0:3], 'ban2': batch[1][10][0:3], 'roll': batch[2][4]}
-            p2 = {'username': batch[0][6], 'score': batch[1][6], 'ban1': batch[2][9][0:3], 'ban2': batch[2][10][0:3], 'roll': batch[2][6]}
+            # syntax is batch[row][col] relative to the range above
+            p1 = {'username': batch[0][0], 'score': batch[1][0], 'ban1': batch[12][1][0:3], 'roll': batch[6][1]}
+            p2 = {'username': batch[0][2], 'score': batch[1][2], 'ban1': batch[13][1][0:3], 'roll': batch[6][2]}
             if '' in p1.values() or '' in p2.values():
                 await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
                                            f'or both players on the sheet for match: {match_id}', delete_after=self.delete_delay)
@@ -112,8 +139,8 @@ class MatchResultPostingCog(commands.Cog):
 
             # Get TB bans, but only if they are present
             try:
-                p1_tb_ban = batch[1][11][0:3]
-                p2_tb_ban = batch[2][11][0:3]
+                p1_tb_ban = batch[15][1][0:3]
+                p2_tb_ban = batch[15][2][0:3]
             except IndexError:
                 p1_tb_ban = p2_tb_ban = ''
             else:
@@ -125,9 +152,9 @@ class MatchResultPostingCog(commands.Cog):
 
             # Construct the embed
             description = (f':flag_{p1["flag"]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
-                           f'Roll: {p1["roll"]} - Bans: {p1["ban1"]}, {p1["ban2"]}{p1_tb_ban}\n'
+                           f'Roll: {p1["roll"]} - Bans: {p1["ban1"]}{p1_tb_ban}\n'
                            f':flag_{p2["flag"]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
-                           f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}, {p2["ban2"]}{p2_tb_ban}')
+                           f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}{p2_tb_ban}')
             embed = discord.Embed(title=f'Match ID: {match_id}', description=description, color=0xe47607)
             embed.set_author(name=f'{setts["tourney_round"]}: ({p1["username"]}) vs ({p2["username"]})',
                              url=f'https://osu.ppy.sh/mp/{lobby_id}')
@@ -152,7 +179,7 @@ class MatchResultPostingCog(commands.Cog):
             embed.set_footer(text=footer)
 
             # Construct the fields within the embed, displaying each pick and score differences
-            firstpick = batch[3][5]
+            firstpick = batch[9][1]
             if firstpick not in [p1['username'], p2['username']]:
                 await message.channel.send(f'{message.author.mention} Failed to find who picked first by looking at the'
                                            f'sheet for match: {match_id}', delete_after=self.delete_delay)
@@ -187,7 +214,7 @@ class MatchResultPostingCog(commands.Cog):
                 bmapFormatted = f"{bmapJson['artist']} - {bmapJson['title']} [{bmapJson['version']}]"
 
                 # Filter out scores made by referees
-                scores = [score for score in game['scores'] if int(score['user_id']) not in setts["referees"]]
+                scores = [score for score in game['scores'] if int(score['user_id']) not in referees]
                 scores.sort(key=lambda score: int(score['score']), reverse=True)
                 # Retreive winner's username from osu api or cache
                 if scores[0]['user_id'] not in self.userID_username_cache.keys():
@@ -199,7 +226,7 @@ class MatchResultPostingCog(commands.Cog):
 
                 # Check if map was tiebreaker
                 if pool[bmapID].startswith('TB'):
-                    firstline = f'{tiebreaker} **Tiebreaker**'
+                    firstline = f'{tiebreaker} **Tiebreaker** [{pool[bmapID]}]'
                 else:
                     firstline = f'{emote}Pick #{i+1} by __{picker}__ [{pool[bmapID]}]'
                 # One or both players didn't play a map
@@ -220,14 +247,17 @@ class MatchResultPostingCog(commands.Cog):
                 return
             for channel in resultchannels:
                 try:
-                    await channel.send(embed=embed)
-                    if message.channel.name == 'referee':
+                    if oldmessage is None:
+                        await channel.send(embed=embed)
+                    else:
+                        await oldmessage.edit(content='', embed=embed)
+                    if message.channel.name != 'match-results':
                         await message.channel.send(f'{message.author.mention} Done', delete_after=self.delete_delay)
                     return
                 except Exception:
                     continue
             else:
-                await message.channel.send(f'{message.author.mention} Couldn\'t post to the results channel for some reason. ping diony', delete_after=self.delete_delay)
+                await message.channel.send(f'{message.author.mention} Couldn\'t post to the results channel. ping diony', delete_after=self.delete_delay)
 
 
 def setup(bot):
