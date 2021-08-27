@@ -10,7 +10,7 @@ from utility_funcs import get_setting, is_channel, request, res_cog, url_to_id
 
 class MatchResultPostingCog(commands.Cog):
     delete_delay = 10
-    match_id_format = '[A-H][0-9]+'
+    match_id_format = '[0-9]+'
     old_trigger = re.compile(f'^{match_id_format}$', re.IGNORECASE)
     new_trigger = re.compile(f'^!{match_id_format}$', re.IGNORECASE)
     userID_username_cache = {}
@@ -105,11 +105,16 @@ class MatchResultPostingCog(commands.Cog):
             batch = (await ws.batch_get(['B2:D17']))[0]
             # Gather info together from sheet
             # syntax is batch[row][col] relative to the range above
-            p1 = {'username': batch[0][0], 'score': batch[1][0], 'ban1': batch[12][1][0:3], 'roll': batch[6][1]}
-            p2 = {'username': batch[0][2], 'score': batch[1][2], 'ban1': batch[13][1][0:3], 'roll': batch[6][2]}
-            if '' in p1.values() or '' in p2.values():
-                await message.channel.send(f'{message.author.mention} Failed to find username, score, ban or roll for one '
-                                           f'or both players on the sheet for match: {match_id}', delete_after=self.delete_delay)
+
+            try:
+                p1 = {'username': batch[0][0], 'score': batch[1][0], 'ban1': batch[12][1][0:3], 'ban2': batch[12][2][0:3], 'roll': batch[6][1]}
+                p2 = {'username': batch[0][2], 'score': batch[1][2], 'ban1': batch[13][1][0:3], 'ban2': batch[13][2][0:3], 'roll': batch[6][2]}
+                if '' in p1.values() or '' in p2.values():
+                    raise IndexError()
+            except IndexError:
+                # Catches errors either from referencing 'batch' wrong or if any value is empty. Both indicate something off with how the sheet is referenced.
+                await message.channel.send(f'{message.author.mention} Failed to get all match info from the ref sheet. '
+                                           f'Make sure the usernames, scores, bans & rolls are all present.', delete_after=self.delete_delay)
                 return
             # Used to line up the scores horizontally by left justifying the username to this amount
             longest_name_len = len(max([p1['username'], p2['username']], key=len))
@@ -152,9 +157,9 @@ class MatchResultPostingCog(commands.Cog):
 
             # Construct the embed
             description = (f':flag_{p1["flag"]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
-                           f'Roll: {p1["roll"]} - Bans: {p1["ban1"]}{p1_tb_ban}\n'
+                           f'Roll: {p1["roll"]} - Bans: {p1["ban1"]}, {p1["ban2"]}{p1_tb_ban}\n'
                            f':flag_{p2["flag"]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
-                           f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}{p2_tb_ban}')
+                           f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}, {p2["ban2"]}{p2_tb_ban}')
             embed = discord.Embed(title=f'Match ID: {match_id}', description=description, color=0xe47607)
             embed.set_author(name=f'{setts["tourney_round"]}: ({p1["username"]}) vs ({p2["username"]})',
                              url=f'https://osu.ppy.sh/mp/{lobby_id}')
