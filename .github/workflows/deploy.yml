@@ -1,0 +1,23 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run commands on VPS using repo secrets.
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        port: ${{ secrets.PORT }}
+        script: |
+          cd Programs/ANZTBot
+          # Terminates any current running instance of the bot. "|| true" ignores the exit code which is 1 when there is no instance already running; which would end this workflow.
+          screen -XS anztbot quit || true
+          git pull https://github.com/JWWolstenholme/ANZTBot
+          screen -dmS anztbot bash -c "python3.9 /home/${{ secrets.USERNAME }}/Programs/ANZTBot/main.py"
