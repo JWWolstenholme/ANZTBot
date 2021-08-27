@@ -1,5 +1,6 @@
 {
     // Remove all comments before use otherwise this won't parse.
+    // "Exposed" settings are just settings that can be modified during runtime. See !settings and !set in owner.py.
     "discord.py": {
         "bot_token": ""
     },
@@ -14,6 +15,8 @@
         "apikey": ""
     },
     "match-result-posting": {
+        // A list of referee Osu! user ids to ignore when looking at Osu! lobby scores
+        // This only matters if the reffs play and actually beat one of the players
         "referees": [],
         "exposed_settings": {
             // Shown to users to signify round in results. Recommend an acronym like RO16 or GS.
@@ -23,9 +26,21 @@
             // The url of the spreadsheet that contains our referee's inputs
             "sheet_url": "",
             // The name of the worksheet within the spreadsheet defined above that contains the schedule for this week
-            "sheet_tab_name": ""
-            // A list of referee Osu! user ids to ignore when looking at Osu! lobby scores
-            // This only matters if the reffs play and actually beat one of the players
+            "sheet_tab_name": "",
+            // Where to look in the above sheet for information about the match
+			"first_pick": "C11",
+			"p1_username": "B2",
+			"p1_score": "B3",
+			"p1_ban_1": "C14",
+			"p1_ban_2": "D14",
+			"p1_ban_tb": "C17",
+			"p1_roll": "C8",
+			"p2_username": "D2",
+			"p2_score": "D3",
+			"p2_ban_1": "C15",
+			"p2_ban_2": "D15",
+			"p2_ban_tb": "D17",
+			"p2_roll": "D8"
 
         }
     },

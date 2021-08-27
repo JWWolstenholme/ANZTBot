@@ -102,20 +102,18 @@ class MatchResultPostingCog(commands.Cog):
             #     await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) looks to be incomplete. Use !mp close', delete_after=self.delete_delay)
             #     return
 
-            batch = (await ws.batch_get(['B2:D17']))[0]
-            # Gather info together from sheet
-            # syntax is batch[row][col] relative to the range above
-
-            try:
-                p1 = {'username': batch[0][0], 'score': batch[1][0], 'ban1': batch[12][1][0:3], 'ban2': batch[12][2][0:3], 'roll': batch[6][1]}
-                p2 = {'username': batch[0][2], 'score': batch[1][2], 'ban1': batch[13][1][0:3], 'ban2': batch[13][2][0:3], 'roll': batch[6][2]}
-                if '' in p1.values() or '' in p2.values():
-                    raise IndexError()
-            except IndexError:
-                # Catches errors either from referencing 'batch' wrong or if any value is empty. Both indicate something off with how the sheet is referenced.
-                await message.channel.send(f'{message.author.mention} Failed to get all match info from the ref sheet. '
-                                           f'Make sure the usernames, scores, bans & rolls are all present.', delete_after=self.delete_delay)
+            # Get the values of all exposed settings except the first 4 which aren't sheet references. Refer to settings_template.json.
+            sheet_references = list(setts.values())[4:]
+            data = await ws.batch_get(sheet_references)
+            # Unwrap the double nested list that is returned but keep empty cells.
+            data = [i[0][0] if i != [] else i for i in data]
+            p1 = {'username': data[1], 'score': data[2], 'ban1': data[3][0:3], 'ban2': data[4][0:3], 'roll': data[6]}
+            p2 = {'username': data[7], 'score': data[8], 'ban1': data[9][0:3], 'ban2': data[10][0:3], 'roll': data[12]}
+            if [] in p1.values() or [] in p2.values():
+                await message.channel.send(f'{message.author.mention} Sheet is missing one or all of player\'s '
+                                           f'usernames, scores, bans or rolls.', delete_after=self.delete_delay)
                 return
+
             # Used to line up the scores horizontally by left justifying the username to this amount
             longest_name_len = len(max([p1['username'], p2['username']], key=len))
             # Highlight who the winner was using bold and an emoji
@@ -143,17 +141,14 @@ class MatchResultPostingCog(commands.Cog):
             p2['flag'] = flag
 
             # Get TB bans, but only if they are present
-            try:
-                p1_tb_ban = batch[15][1][0:3]
-                p2_tb_ban = batch[15][2][0:3]
-            except IndexError:
+            p1_tb_ban = data[5][0:3]
+            p2_tb_ban = data[11][0:3]
+            # Check if either cell is empty. Represented by either "TB0" or [].
+            if any(x in [p1_tb_ban, p2_tb_ban] for x in ['TB0', []]):
                 p1_tb_ban = p2_tb_ban = ''
             else:
-                if 'TB0' in [p1_tb_ban, p2_tb_ban]:
-                    p1_tb_ban = p2_tb_ban = ''
-                else:
-                    p1_tb_ban = ', ' + p1_tb_ban
-                    p2_tb_ban = ', ' + p2_tb_ban
+                p1_tb_ban = ', ' + p1_tb_ban
+                p2_tb_ban = ', ' + p2_tb_ban
 
             # Construct the embed
             description = (f':flag_{p1["flag"]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
@@ -184,7 +179,7 @@ class MatchResultPostingCog(commands.Cog):
             embed.set_footer(text=footer)
 
             # Construct the fields within the embed, displaying each pick and score differences
-            firstpick = batch[9][1]
+            firstpick = data[0]
             if firstpick not in [p1['username'], p2['username']]:
                 await message.channel.send(f'{message.author.mention} Failed to find who picked first by looking at the'
                                            f'sheet for match: {match_id}', delete_after=self.delete_delay)
