@@ -28,6 +28,7 @@ def get_setting(category, setting=None):
     if not setting:
         return category
 
+    # TODO: Fix this logic. Currently it's not possible to grab a non-exposed setting without grabbing everything in the category.
     return category['exposed_settings'][setting] if 'exposed_settings' in category else category[setting]
 
 

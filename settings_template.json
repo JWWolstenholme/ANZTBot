@@ -53,8 +53,6 @@
         "osu_app_client_secret": "",
         "redirect_url": "https://osuanzt.com/register/",
         // Displayed to users when sent their signup link
-        "signup_close_date": "",
-        "forum_post_url": "https://osu.ppy.sh/community/forums/topics/1204722",
         "allowed_countries": [
             "NZ",
             "AU"
@@ -63,7 +61,9 @@
             // Url of the sheet to append signups to as they come in
             "sheet_url": "",
             // The name of the actual tab inside the above spreadsheet to append rows to
-            "sheet_tab_name": ""
+            "sheet_tab_name": "",
+            "forum_post_url": "https://osu.ppy.sh/community/forums/topics/1204722",
+            "signup_close_date": ""
 
         }
     },

@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.ext.commands.converter import MessageConverter
 from discord.ext.commands.errors import MessageNotFound
 from gspread.exceptions import APIError
-from utility_funcs import get_setting, request, res_cog
+from utility_funcs import get_setting, get_exposed_settings, request, res_cog
 
 
 class TourneySignupCog(commands.Cog):
@@ -24,7 +24,7 @@ class TourneySignupCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        '''Deletes unnesecary messages in the registration channel'''
+        '''Deletes unnecessary messages in the registration channel'''
         if message.author == self.bot.user:
             return
         if message.channel.name in ['register']:
@@ -110,7 +110,7 @@ class TourneySignupCog(commands.Cog):
         colour = 0xf5a623
 
         embed = Embed(title="Click here to register for ANZT8W", colour=colour, url=oauth_url)
-        embed.set_footer(text=f"This link is unique to you - Registrations close {setts['signup_close_date']}")
+        embed.set_footer(text=f"This link is unique to you - Registrations close {setts['exposed_settings']['signup_close_date']}")
 
         try:
             await user.send(embed=embed)
@@ -127,7 +127,7 @@ class TourneySignupCog(commands.Cog):
         embed = Embed(colour=colour,
                       description="```fix\nYou will be prompted to log in on the official osu! site.\n\n"
                                   "This lets us confirm you are the owner of these Discord and osu! accounts.```"
-                                  "*[Forum Post](https://osu.ppy.sh/community/forums/topics/1346048) - "
+                                  f"*[Forum Post]({setts['exposed_settings']['forum_post_url']}) - "
                                   "[Source](https://github.com/JWWolstenholme/ANZTBot) - by Diony*")
         await user.send(embed=embed)
         self.prompted_users.append(user.id)
@@ -225,14 +225,15 @@ class TourneySignupCog(commands.Cog):
                 await conn.execute('''insert into signups values ($1, $2)''', discord_id, osu_id)
 
         # Persist in spreadsheet
+        setts = get_exposed_settings("tourney-signup")
         agc = await res_cog(self.bot).agc()
         try:
-            sh = await agc.open_by_url('https://docs.google.com/spreadsheets/d/1dYN6A83NAZxLYpESHiQR2khkqqoNUh5nlrYt_vgj-vI')
+            sh = await agc.open_by_url(setts["sheet_url"])
         except APIError as e:
             if e.args[0]['status'] == 'PERMISSION_DENIED':
                 print('no perms. share with anzt-bot@anzt-bot.iam.gserviceaccount.com')
             return
-        ws = await sh.worksheet('Signups')
+        ws = await sh.worksheet(setts["sheet_tab_name"])
 
         disc_user = self.bot.get_user(int(discord_id))
 
