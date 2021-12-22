@@ -238,10 +238,13 @@ class TourneySignupCog(commands.Cog):
         disc_user = self.bot.get_user(int(discord_id))
 
         apiKey = get_setting('osu', 'apikey')
-        json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={osu_id}&type=id', self.bot)
-        osu_username = json[0]['username']
+        json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={osu_id}&type=id&m=0', self.bot)
+        json = json[0]
+        osu_username = json['username']
+        rank = json['pp_rank']
+        country = json['country']
 
-        await ws.append_row([datetime.now().strftime('%d/%m/%Y %H:%M:%S'), discord_id, str(disc_user), disc_user.display_name, osu_id, osu_username])
+        await ws.append_row([datetime.now().strftime('%d/%m/%Y %H:%M:%S'), discord_id, str(disc_user), disc_user.display_name, osu_id, osu_username, rank, country])
 
     @commands.command()
     @commands.has_permissions(administrator=True)
