@@ -63,7 +63,8 @@
             "sheet_tab_name": "",
             "forum_post_url": "https://osu.ppy.sh/community/forums/topics/1204722",
             // Displayed to users when sent their signup link
-            "signup_close_date": ""
+            "signup_close_date": "",
+			"acronym": "ANZT9S"
 
         }
     },

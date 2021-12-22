@@ -109,7 +109,7 @@ class TourneySignupCog(commands.Cog):
         oauth_url = await self.generate_oauth_url(user.id, setts)
         colour = 0xf5a623
 
-        embed = Embed(title="Click here to register for ANZT8W", colour=colour, url=oauth_url)
+        embed = Embed(title=f"Click here to register for {setts['exposed_settings']['acronym']}", colour=colour, url=oauth_url)
         embed.set_footer(text=f"This link is unique to you - Registrations close {setts['exposed_settings']['signup_close_date']}")
 
         try:
