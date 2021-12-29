@@ -120,7 +120,7 @@ class TourneySignupCog(commands.Cog):
             embed = Embed(colour=0xFF253F, url='https://support.discord.com/hc/en-us/articles/217916488-Blocking-Privacy-Settings-',
                           description='You have private messages disabled so I couldn\'t give you your signup link.\n'
                           'You can enable them in the settings under: ```Privacy & Safety > Allow direct messages from server members```'
-                          'Then try to register again.')
+                          'Then try to register again. You can then disable the setting again.')
             await botchannel.send(f'{user.mention}', embed=embed)
             return False
 
