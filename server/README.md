@@ -4,7 +4,7 @@ This directory contains a Flask server and it's accompanying WSGI file to interf
 
 This handles the part of the [OAuth 2.0 Authorization Code Grant](https://oauth.net/2/grant-types/authorization-code/) process, required by the [osu! v2 API](https://osu.ppy.sh/docs/index.html?bash#authentication), where users are redirected back to your service after the user has granted access to you.
 
-More specifically when a user is redirected back to [osuanzt.com/register](http://osuanzt.com/register/), this web server will send the OAuth values included within the url parameters to the [`tourney-registering.py`](/cogs/tourney-registering.py) cog running in an instance of ANZTBot. ANZTBot then continues the rest of the OAuth procedure. A [TCP Python Stream](https://docs.python.org/3/library/asyncio-stream.html#tcp-echo-client-using-streams) is used to communicate between the web server and the discord bot.
+More specifically when a user is redirected back to [osuanzt.com/register](http://osuanzt.com/register/), this web server will send the OAuth values included within the url parameters to the [`tourney-signup.py`](/cogs/tourney-signup.py) cog running in an instance of ANZTBot. ANZTBot then continues the rest of the OAuth procedure. A [TCP Python Stream](https://docs.python.org/3/library/asyncio-stream.html#tcp-echo-client-using-streams) is used to communicate between the web server and the discord bot.
 
 
 ## How I configured this to run in production
