@@ -2,6 +2,7 @@ import asyncio
 import pickle
 from datetime import datetime
 
+from asyncpg.exceptions import UniqueViolationError
 from cryptography.fernet import Fernet, InvalidToken
 from discord import Embed, File, User
 from discord.errors import Forbidden
@@ -9,7 +10,7 @@ from discord.ext import commands
 from discord.ext.commands.converter import MessageConverter
 from discord.ext.commands.errors import MessageNotFound
 from gspread.exceptions import APIError
-from utility_funcs import get_setting, get_exposed_settings, request, res_cog
+from utility_funcs import get_exposed_settings, get_setting, request, res_cog
 
 
 class TourneySignupCog(commands.Cog):
@@ -220,9 +221,15 @@ class TourneySignupCog(commands.Cog):
 
     async def persist_signup(self, discord_id, osu_id):
         # Persist in database
-        async with (await self._connpool()).acquire() as conn:
-            async with conn.transaction():
-                await conn.execute('''insert into signups values ($1, $2)''', discord_id, osu_id)
+        try:
+            async with (await self._connpool()).acquire() as conn:
+                async with conn.transaction():
+                    await conn.execute('''insert into signups values ($1, $2)''', discord_id, osu_id)
+        except UniqueViolationError as e:
+            # Some users (about 3 in 44 users) were triggering the oauth redirect multiple times somehow, causing handle() and then persist_signup to be called twice.
+            # If they're already in the database, then the other call must have beaten this call to it so we just return to handle() which will give them a success message.
+            # This assumes there was no errors in the other persist_signup() call so this isn't ideal.
+            return
 
         # Persist in spreadsheet
         setts = get_exposed_settings("tourney-signup")
