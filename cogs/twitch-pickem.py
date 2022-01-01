@@ -55,6 +55,8 @@ class TwitchAndPickemsCog(commands.Cog):
             else:
                 activity = None
             await self.bot.change_presence(activity=activity)
+        except ConnectionResetError:
+            pass
         except Exception:
             errorcog = self.bot.get_cog('ErrorReportingCog')
             await errorcog.on_error('anzt.twitch.loop')
