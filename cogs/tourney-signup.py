@@ -8,7 +8,7 @@ from discord import Embed, File, User
 from discord.errors import Forbidden
 from discord.ext import commands
 from discord.ext.commands.converter import MessageConverter
-from discord.ext.commands.errors import MessageNotFound
+from discord.ext.commands.errors import CommandInvokeError, MessageNotFound
 from gspread.exceptions import APIError
 from utility_funcs import get_exposed_settings, get_setting, request, res_cog
 
@@ -40,9 +40,15 @@ class TourneySignupCog(commands.Cog):
             await ctx.message.add_reaction('✅')
         else:
             await ctx.message.add_reaction('❌')
-            await ctx.send(f'{ctx.author.mention} I\'ve already sent you a dm', delete_after=10)
-        await asyncio.sleep(10)
-        await ctx.message.delete()
+            await ctx.send(f'{ctx.author.mention} I\'ve already sent you a dm', delete_after=self.delete_delay)
+
+        await asyncio.sleep(7)
+
+        try:
+            await ctx.message.delete()
+        except CommandInvokeError as e:
+            # User manually deleted their message.
+            pass
 
     @commands.command()
     @commands.has_permissions(administrator=True)
