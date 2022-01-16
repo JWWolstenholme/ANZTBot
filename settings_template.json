@@ -64,8 +64,8 @@
             "forum_post_url": "https://osu.ppy.sh/community/forums/topics/1204722",
             // Displayed to users when sent their signup link
             "signup_close_date": "",
-			"acronym": "ANZT9S"
-
+			"acronym": "ANZT9S",
+            "signups_open": "Y"
         }
     },
     "postgresql": {
