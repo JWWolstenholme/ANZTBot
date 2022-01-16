@@ -180,6 +180,9 @@ class TourneySignupCog(commands.Cog):
         if await self.check_if_registered(state):
             await self.write(writer, False, "You're already signed up!")
             return
+        elif setts["exposed_settings"]["signups_open"] == "N":
+            await self.write(writer, False, "Signups have closed!")
+            return
 
         print(f'Using one-time code to get authorization token')
         data = {
