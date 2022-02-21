@@ -73,9 +73,10 @@ class TwitchAndPickemsCog(commands.Cog):
         embed.set_image(url='https://static-cdn.jtvnw.net/previews-ttv/live_user_osuanzt-960x540.jpg')
 
         anzt = self.bot.get_guild(199158455888642048)
+        anzt_channel = anzt.get_channel(945236506547728414)
         pingrole = [role for role in anzt.roles if role.name == 'Stream Ping'][0]
         await pingrole.edit(mentionable=True)
-        await anzt.system_channel.send(f'{pingrole.mention}', embed=embed)
+        await anzt_channel.send(f'{pingrole.mention}', embed=embed)
         await pingrole.edit(mentionable=False)
 
     @commands.command()
