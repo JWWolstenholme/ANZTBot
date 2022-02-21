@@ -10,6 +10,7 @@ from utility_funcs import is_channel, get_setting
 
 class TwitchAndPickemsCog(commands.Cog):
     delete_delay = 10
+    last_ping = datetime.fromisoformat('2011-11-04T00:05:23')
 
     def __init__(self, bot):
         self.bot = bot
@@ -48,9 +49,11 @@ class TwitchAndPickemsCog(commands.Cog):
                 stream_start = data['started_at']
                 with open('last_stream_start.txt', 'r') as f:
                     last_stream_start = datetime.fromisoformat(f.read())
-                if last_stream_start < stream_start:
+
+                if last_stream_start < stream_start and self.last_ping + datetime.timedelta(minutes=30) < stream_start:
                     with open('last_stream_start.txt', 'w') as f:
                         f.write(str(stream_start))
+                        self.last_ping = stream_start
                     await self.do_stream_ping(data)
             else:
                 activity = None
