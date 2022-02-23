@@ -11,7 +11,6 @@ from utility_funcs import get_setting, is_channel, request, res_cog, url_to_id
 class MatchResultPostingCog(commands.Cog):
     delete_delay = 10
     match_id_format = '[0-9]+'
-    old_trigger = re.compile(f'^{match_id_format}$', re.IGNORECASE)
     new_trigger = re.compile(f'^!{match_id_format}$', re.IGNORECASE)
     userID_username_cache = {}
     bmapID_json_cache = {}
@@ -30,9 +29,6 @@ class MatchResultPostingCog(commands.Cog):
                 async with message.channel.typing():
                     await message.delete()
                     await self.post_result(message, message.content.lstrip('!').upper())
-            if re.match(self.old_trigger, message.content):
-                async with message.channel.typing():
-                    await message.reply('Command has been updated. Use an exclamation mark before the ID to trigger it e.g. !F8', delete_after=self.delete_delay)
 
     @commands.command(aliases=['del', 'undo'])
     @is_channel('match-results')
