@@ -53,10 +53,10 @@ class TwitchAndPickemsCog(commands.Cog):
                 if last_stream_start < stream_start:
                     with open('last_stream_start.txt', 'w') as f:
                         f.write(str(stream_start))
-                        self.last_ping = stream_start
 
                     if self.last_ping + timedelta(minutes=30) < stream_start:
                         await self.do_stream_ping(data)
+                    self.last_ping = stream_start
             else:
                 activity = None
             await self.bot.change_presence(activity=activity)
