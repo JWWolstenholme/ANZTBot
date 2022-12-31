@@ -11,7 +11,7 @@ from utility_funcs import get_setting, is_channel, request, res_cog, url_to_id
 class MatchResultPostingCog(commands.Cog):
     delete_delay = 10
     match_id_format = '[0-9]+'
-    new_trigger = re.compile(f'^!{match_id_format}$', re.IGNORECASE)
+    trigger = re.compile(f'^!{match_id_format}$', re.IGNORECASE)
     userID_username_cache = {}
     bmapID_json_cache = {}
     username_flag_cache = {}
@@ -25,7 +25,7 @@ class MatchResultPostingCog(commands.Cog):
             return
         # if message.channel.name in ['bot']:
         if message.channel.name in ['match-results', 'referee']:
-            if re.match(self.new_trigger, message.content):
+            if re.match(self.trigger, message.content):
                 async with message.channel.typing():
                     await message.delete()
                     await self.post_result(message, message.content.lstrip('!').upper())
@@ -57,7 +57,7 @@ class MatchResultPostingCog(commands.Cog):
             return
 
         # Check if match_id is valid
-        if re.match(self.match_id_format, match_id):
+        if not re.match(self.match_id_format, match_id):
             await ctx.send(f'{ctx.author.mention} That isn\'t a valid match id.', delete_after=self.delete_delay)
             return
 

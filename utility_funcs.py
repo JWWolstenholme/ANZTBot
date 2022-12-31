@@ -71,6 +71,8 @@ def is_channel(*args: str):
 
 
 def url_to_id(url: str) -> int:
+    if (url is None):
+        raise SyntaxError("\"{}\" is not a valid mp link".format(url))
     osu_mp_url = re.compile(r'((https://osu.ppy.sh/community/matches/)|(https://osu.ppy.sh/mp/))(?P<id>[0-9]+)')
     match = re.search(osu_mp_url, url)
     if match:
