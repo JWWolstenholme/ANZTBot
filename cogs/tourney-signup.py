@@ -260,7 +260,7 @@ class TourneySignupCog(commands.Cog):
         rank = json['pp_rank']
         country = json['country']
 
-        await ws.append_row([datetime.now().strftime('%d/%m/%Y %H:%M:%S'), discord_id, str(disc_user), disc_user.display_name, osu_id, osu_username, rank, country])
+        await ws.append_row([osu_id, osu_username, country, rank, str(disc_user), discord_id])
 
     @commands.command()
     @commands.has_permissions(administrator=True)
