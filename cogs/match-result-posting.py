@@ -103,8 +103,10 @@ class MatchResultPostingCog(commands.Cog):
             data = await ws.batch_get(sheet_references)
             # Unwrap the double nested list that is returned but keep empty cells.
             data = [i[0][0] if i != [] else i for i in data]
-            p1 = {'username': data[1], 'score': data[2], 'ban1': data[3][0:3], 'ban2': data[4][0:3], 'roll': data[6]}
-            p2 = {'username': data[7], 'score': data[8], 'ban1': data[9][0:3], 'ban2': data[10][0:3], 'roll': data[12]}
+            # , 'ban2': data[4][0:3], 'roll': data[6]
+            # , 'ban2': data[10][0:3], 'roll': data[12]
+            p1 = {'username': data[1], 'score': data[2], 'ban1': data[3][0:3], 'ban2': data[4][0:3], 'protect1': data[6][0:3]}
+            p2 = {'username': data[8], 'score': data[9], 'ban1': data[10][0:3], 'ban2': data[11][0:3], 'protect1': data[13][0:3]}
             if [] in p1.values() or [] in p2.values():
                 await message.channel.send(f'{message.author.mention} Sheet is missing one or all of player\'s '
                                            f'usernames, scores, bans or rolls.', delete_after=self.delete_delay)
@@ -148,16 +150,16 @@ class MatchResultPostingCog(commands.Cog):
 
             # Construct the embed
             description = (f':flag_{p1["flag"]}: `{p1["username"].ljust(longest_name_len)} -` {p1["score"]}\n'
-                           f'Roll: {p1["roll"]} - Bans: {p1["ban1"]}, {p1["ban2"]}{p1_tb_ban}\n'
+                           f'Bans: {p1["ban1"]}, {p1["ban2"]} - Protects: {p1["protect1"]}\n'
                            f':flag_{p2["flag"]}: `{p2["username"].ljust(longest_name_len)} -` {p2["score"]}\n'
-                           f'Roll: {p2["roll"]} - Bans: {p2["ban1"]}, {p2["ban2"]}{p2_tb_ban}')
+                           f'Bans: {p2["ban1"]}, {p2["ban2"]} - Protects: {p2["protect1"]}')
             embed = discord.Embed(title=f'Match ID: {match_id}', description=description, color=0xe47607)
             embed.set_author(name=f'{setts["tourney_round"]}: ({p1["username"]}) vs ({p2["username"]})',
                              url=f'https://osu.ppy.sh/mp/{lobby_id}')
 
             # Add streamer and referee to footer
             ws = await sh.worksheet(setts["sheet_tab_name"])
-            schedule_batch = (await ws.batch_get(['B5:I100']))[0]
+            schedule_batch = (await ws.batch_get(['B5:I500']))[0]
             referee = ''
             streamer = ''
             reporter = message.author.display_name
