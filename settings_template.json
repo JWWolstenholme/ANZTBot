@@ -9,7 +9,9 @@
         "twitch_channel": "osuanzt",
         // Twitch application client ID and secret for making api calls
         "client_id": "",
-        "client_secret": ""
+        "client_secret": "",
+        // Should the bot actively check the twitch channel to see if it is live
+        "active": "Y"
     },
     "osu": {
         "apikey": ""
@@ -34,12 +36,14 @@
 			"p1_ban_1": "C14",
 			"p1_ban_2": "D14",
 			"p1_ban_tb": "C17",
+            "p1_protect": "G25",
 			"p1_roll": "C8",
 			"p2_username": "D2",
 			"p2_score": "D3",
 			"p2_ban_1": "C15",
 			"p2_ban_2": "D15",
 			"p2_ban_tb": "D17",
+            "p2_protect": "G26",
 			"p2_roll": "D8"
 
         }

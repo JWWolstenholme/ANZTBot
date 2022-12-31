@@ -28,6 +28,10 @@ class TwitchAndPickemsCog(commands.Cog):
 
     @tasks.loop(seconds=22)
     async def check_if_live(self):
+        should_check = get_setting("twitch", "active")
+        if should_check != "Y":
+            return
+
         twitchannel = get_setting("twitch", "twitch_channel")
 
         try:
