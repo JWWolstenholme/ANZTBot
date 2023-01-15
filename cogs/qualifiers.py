@@ -1,19 +1,26 @@
+import discord
+from asyncpg import RaiseError
 from discord.ext import commands
-from resources import is_channel, send_typing, connpool, is_staff
+from discord.ext.commands import BucketType
+from datetime import date
+from utility_funcs import is_channel, res_cog, confirm
 
 
 class QualifiersCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    async def _connpool(self):
+        return await res_cog(self.bot).connpool()
+
     @commands.command()
     @is_channel('qualifiers')
-    @send_typing
     @commands.cooldown(1, 6, BucketType.channel)
     async def lobby(self, ctx, lobby_id: int):
         await ctx.message.delete()
         id = ctx.author.id
-        async with connpool.acquire() as conn:
+        await ctx.trigger_typing()
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 player = await conn.fetchrow('''select * from players where discord_id=$1''', id)
                 if player is None:
@@ -38,18 +45,18 @@ class QualifiersCog(commands.Cog):
                     else:
                         await conn.execute('''update lobby_signups set lobby_id=$1 where osu_id=$2''', lobby_id, player['osu_id'])
                         await ctx.send(f'{ctx.author.mention} Switched you to lobby {lobby_id}', delete_after=10)
-                except asyncpg.exceptions.RaiseError:
+                except RaiseError:
                     await ctx.send(f'{ctx.author.mention} Lobby {lobby_id} is full', delete_after=10)
         await self.update_lobbies(ctx)
 
     @commands.command()
     @is_channel('qualifiers')
     @commands.has_permissions(administrator=True)
-    @send_typing
     @commands.cooldown(1, 6, BucketType.channel)
     async def signup(self, ctx, osu_username: str, lobby_id: int):
         await ctx.message.delete()
-        async with connpool.acquire() as conn:
+        await ctx.trigger_typing()
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 player = await conn.fetchrow('''select * from players where osu_username ilike $1''', osu_username)
                 if player is None:
@@ -74,18 +81,18 @@ class QualifiersCog(commands.Cog):
                     else:
                         await conn.execute('''update lobby_signups set lobby_id=$1 where osu_id=$2''', lobby_id, player['osu_id'])
                         await ctx.send(f'{ctx.author.mention} Switched {osu_username} to lobby {lobby_id}', delete_after=10)
-                except asyncpg.exceptions.RaiseError:
+                except RaiseError:
                     await ctx.send(f'{ctx.author.mention} Lobby {lobby_id} is full', delete_after=10)
         await self.update_lobbies(ctx)
 
     @commands.command()
     @is_channel('qualifiers')
-    @is_staff()
-    @send_typing
+    @commands.has_permissions(administrator=True)
     async def placeholders(self, ctx):
+        await ctx.trigger_typing()
         await ctx.message.delete()
         # remove previous messages
-        async with connpool.acquire() as conn:
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 messages = await conn.fetch('''select message_id from persistent_messages''')
                 for message in messages:
@@ -96,31 +103,31 @@ class QualifiersCog(commands.Cog):
                         pass
                 await conn.execute('''delete from persistent_messages''')
 
-        dates = [date(2020, 7, 10), date(2020, 7, 11), date(2020, 7, 12)]
-        thumbnail_urls = ['https://i.imgur.com/Of7Z8pD.png', 'https://i.imgur.com/7Gochmd.png', 'https://i.imgur.com/EzpZz0k.png']
+        dates = [date(2023, 1, 20), date(2023, 1, 21), date(2023, 1, 22)]
+        thumbnail_urls = ['https://i.imgur.com/s1FX0BC.png', 'https://i.imgur.com/HGG8cLc.png', 'https://i.imgur.com/IsZ9i8j.png']
         ids = []
         # send the placeholder messages
         for _ in dates:
             message = await ctx.send(embed=discord.Embed(description='placeholder'))
             ids.append(message.id)
-        message = await ctx.send(embed=discord.Embed(description='Use `!lobby #` to sign up for, switch to or leave a lobby E.g. !lobby 5\nAll times are in AEST (UTC+10) | @Diony in another channel for bot problems'))
+        message = await ctx.send(embed=discord.Embed(description='Use `!lobby #` to sign up for, switch to or leave a lobby E.g. !lobby 5\nAll times are in AEDT (UTC+11) | @Diony anywhere else for bot problems'))
         ids.append(message.id)
         # store the placeholder messages
-        async with connpool.acquire() as conn:
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 await conn.executemany('''insert into persistent_messages values ($1, $2, $3)''', list(zip(ids, dates, thumbnail_urls)))
                 await conn.execute('''insert into persistent_messages (message_id) values ($1)''', ids[-1])
 
     @commands.command()
     @is_channel('qualifiers')
-    @send_typing
     @commands.cooldown(1, 20, BucketType.channel)
     async def refresh(self, ctx):
+        await ctx.trigger_typing()
         await ctx.message.delete()
         await self.update_lobbies(ctx)
 
     async def update_lobbies(self, ctx):
-        async with connpool.acquire() as conn:
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 messages = await conn.fetch('''select * from persistent_messages;''')
                 lobbies = await conn.fetch('''select * from lobbies;''')
@@ -161,19 +168,19 @@ class QualifiersCog(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    @send_typing
     async def pingunsigned(self, ctx):
+        await ctx.trigger_typing()
         # Get everything after the command
         content = ctx.message.content.lstrip(ctx.prefix + ctx.invoked_with + ' ')
         await ctx.message.delete()
         if content.strip() == '':
             await ctx.send('Add what you want to say to the pingees after the command', delete_after=6)
             return
-        async with connpool.acquire() as conn:
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 nonsigned_discord_ids = await conn.fetch('''select discord_id from players natural join (select osu_id from players except select osu_id from lobby_signups) as i;''')
         nonsigned_discord_ids = [record['discord_id'] for record in nonsigned_discord_ids]
-        nonsigned_users = [bot.get_user(id) for id in nonsigned_discord_ids]
+        nonsigned_users = [self.bot.get_user(id) for id in nonsigned_discord_ids]
         if None in nonsigned_users:
             await ctx.send('Failed to find at least one of the pingees by discord id.', delete_after=7)
             return
@@ -183,11 +190,11 @@ class QualifiersCog(commands.Cog):
             await ctx.send(f'{content}\n{pings}')
 
     @commands.command()
-    @is_staff()
-    @send_typing
+    @commands.has_permissions(administrator=True)
     async def unsigned(self, ctx):
         await ctx.message.delete()
-        async with connpool.acquire() as conn:
+        await ctx.trigger_typing()
+        async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 nonsigned_records = await conn.fetch('''select osu_username from players natural join (select osu_id from players except select osu_id from lobby_signups) as i;''')
         nonsigned_osu_usernames = [record['osu_username'] for record in nonsigned_records]
