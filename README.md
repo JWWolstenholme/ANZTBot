@@ -22,6 +22,13 @@ The feature is triggered by the match ID being posted in our referee's channel.<
 
 ![Screenshot of bot's message in discord](images/match-result.png)
 
+### Qualifier lobby registration system
+See [`qualifiers.py`](cogs/qualifiers.py) for implementation.
+
+Allows users that are registered for the tournament to pick and choose their qualifier lobby using their discord account at any time. Referees can then check the messages below to know when to invite which osu! accounts. 
+
+![Screenshot of bot's message in discord](images/qualifier-lobbies.png)
+
 ### Twitch channel ping
 See [`twitch-pickem.py`](cogs/twitch-pickem.py) for implementation.
 
