@@ -20,5 +20,7 @@ jobs:
           cd Programs/ANZTBot
           # Terminates any current running instance of the bot. "|| true" ignores the exit code which is 1 when there is no instance already running; which would end this workflow.
           screen -XS anztbot quit || true
-          git pull https://github.com/JWWolstenholme/ANZTBot
+          git fetch --all
+          git branch backup-master
+          git reset --hard origin/master
           screen -dmS anztbot bash -c "python3.9 /home/${{ secrets.USERNAME }}/Programs/ANZTBot/main.py"
