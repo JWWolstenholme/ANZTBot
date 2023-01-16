@@ -19,7 +19,8 @@ class QualifiersCog(commands.Cog):
         if message.author == self.bot.user:
             return
         if message.channel.name in ['qualifiers']:
-            if not message.content.startswith('!lobby'):
+            ctx = await self.bot.get_context(message)
+            if not ctx.valid:
                 await message.delete()
                 return
 
