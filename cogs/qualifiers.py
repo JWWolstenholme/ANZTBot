@@ -13,6 +13,16 @@ class QualifiersCog(commands.Cog):
     async def _connpool(self):
         return await res_cog(self.bot).connpool()
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        '''Deletes unnecessary messages in the qualifiers channel'''
+        if message.author == self.bot.user:
+            return
+        if message.channel.name in ['qualifiers']:
+            if not message.content.startswith('!lobby'):
+                await message.delete()
+                return
+
     @commands.command()
     @is_channel('qualifiers')
     @commands.cooldown(1, 6, BucketType.channel)
