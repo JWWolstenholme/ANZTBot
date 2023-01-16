@@ -113,8 +113,8 @@ class QualifiersCog(commands.Cog):
                         pass
                 await conn.execute('''delete from persistent_messages''')
 
-        dates = [date(2023, 1, 20), date(2023, 1, 21), date(2023, 1, 22)]
-        thumbnail_urls = ['https://i.imgur.com/s1FX0BC.png', 'https://i.imgur.com/HGG8cLc.png', 'https://i.imgur.com/IsZ9i8j.png']
+        dates = [date(2023, 1, 19), date(2023, 1, 20), date(2023, 1, 21), date(2023, 1, 22)]
+        thumbnail_urls = ['https://i.imgur.com/dGHbY0M.png', 'https://i.imgur.com/s1FX0BC.png', 'https://i.imgur.com/HGG8cLc.png', 'https://i.imgur.com/IsZ9i8j.png']
         ids = []
         # send the placeholder messages
         for _ in dates:
