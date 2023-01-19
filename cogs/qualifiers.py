@@ -64,6 +64,16 @@ class QualifiersCog(commands.Cog):
         await self.update_lobbies(ctx)
         await self.update_ref_sheet()
 
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def refresh_sheet(self, ctx):
+        await ctx.message.delete()
+        await ctx.trigger_typing()
+
+        await self.update_ref_sheet()
+
+        await ctx.send(f'{ctx.author.mention} Sheet updated.', delete_after=10)
+
     async def update_ref_sheet(self):
         settings = get_exposed_settings("qualifiers")
 
