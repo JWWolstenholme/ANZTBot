@@ -13,7 +13,7 @@ def res_cog(bot):
     raise commands.ExtensionNotFound(cog_name)
 
 
-settings_file = 'settings.json'
+settings_file = 'settings.jsonc'
 
 
 def _get_settings():
