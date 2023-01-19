@@ -61,8 +61,8 @@ class QualifiersCog(commands.Cog):
                         await ctx.send(f'{ctx.author.mention} Switched you to lobby {lobby_id}', delete_after=10)
                 except RaiseError:
                     await ctx.send(f'{ctx.author.mention} Lobby {lobby_id} is full', delete_after=10)
-        await self.update_lobbies(ctx)
         await self.update_ref_sheet()
+        await self.update_lobbies(ctx)
 
     @commands.command()
     @commands.has_permissions(administrator=True)
