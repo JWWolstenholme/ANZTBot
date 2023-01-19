@@ -209,7 +209,7 @@ class QualifiersCog(commands.Cog):
                 # datetime didn't have an easy way to get lowercase am/pm so I just did it manually
                 timestring = f'{time.hour%12}:{str(time.minute).zfill(2)}{"am" if time.hour < 12 else "pm"}'
                 # uses discord emotes to represent time with an analog clock emote
-                name = f':clock{time.hour%12}: {timestring}'
+                name = f':clock{time.hour%12 if time.hour%12 != 0 else 12}: {timestring}'
                 # either contains the reffs osu name or None if lobby has no reff
                 referee_name = [record['staff_osu_username'] for record in staff if record['staff_osu_id'] == lobby['staff_osu_id']]
 
