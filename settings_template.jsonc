@@ -48,6 +48,14 @@
 
         }
     },
+    "qualifiers": {
+        "exposed_settings": {
+            "sheet_url": "",
+            "sheet_tab_name": "Qualifiers Schedule",
+            "info_range": "D2:H40",
+            "output_range": "I2:X40"
+        }
+    },
     "tourney-signup": {
         // Cryptographic key used in Fernet encryption https://cryptography.io/en/latest/fernet.html
         // Used to prevent users from impersonating other discord users in the OAuth process

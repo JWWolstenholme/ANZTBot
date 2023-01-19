@@ -1,12 +1,15 @@
+import re
 import discord
 from asyncpg import RaiseError
 from discord.ext import commands
 from discord.ext.commands import BucketType
 from datetime import date
-from utility_funcs import is_channel, res_cog, confirm
+from utility_funcs import get_exposed_settings, is_channel, res_cog, confirm
 
 
 class QualifiersCog(commands.Cog):
+    spreadsheet_range = re.compile('([a-zA-Z]+)(\\d+):([a-zA-Z]+)(\\d+)')
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -59,6 +62,42 @@ class QualifiersCog(commands.Cog):
                 except RaiseError:
                     await ctx.send(f'{ctx.author.mention} Lobby {lobby_id} is full', delete_after=10)
         await self.update_lobbies(ctx)
+        await self.update_ref_sheet()
+
+    async def update_ref_sheet(self):
+        settings = get_exposed_settings("qualifiers")
+
+        # Get the order of the lobbies on the sheet
+        agc = await res_cog(self.bot).agc()
+        sh = await agc.open_by_url(settings["sheet_url"])
+        ws = await sh.worksheet(settings["sheet_tab_name"])
+        lobbies = (await ws.batch_get([settings["info_range"]]))[0]
+
+        # Get lobby signups from database
+        async with (await self._connpool()).acquire() as conn:
+            async with conn.transaction():
+                lobby_signups_raw = await conn.fetch('''select lobby_id, STRING_AGG(osu_username, '||') as players from lobby_signups left join players on lobby_signups.osu_id = players.osu_id group by lobby_id order by lobby_id asc;''')
+
+        # Convert to dictionary of lobby id to list of player names
+        lobby_signups = {}
+        for lobby in lobby_signups_raw:
+            lobby_signups[int(lobby['lobby_id'])] = lobby['players'].split('||')
+
+        # Create and fill dictionary of cell updates
+        batch_update_data = []
+        # Figure out where to put data based on setting
+        output_range = settings["output_range"]
+        result = re.search(self.spreadsheet_range, output_range)
+        start_col = result.group(1)
+        end_col = result.group(3)
+        row = int(result.group(2))
+        for lobby in lobbies:
+            players = lobby_signups[int(lobby[0])] if int(lobby[0]) in lobby_signups else []
+            batch_update_data.append({'range': f'{start_col}{row}:{end_col}{row}', 'values': [players]})
+            row += 1
+
+        await ws.batch_clear([settings["output_range"]])
+        await ws.batch_update(batch_update_data, value_input_option='RAW')
 
     @commands.command()
     @is_channel('qualifiers')
