@@ -254,14 +254,6 @@ class QualifiersCog(commands.Cog):
                 'discord_user': self.bot.get_user(record['discord_id'])
             })
 
-        # # TODO: remove this
-        nonsigned_users.append({
-            'osu_id': '123',
-            'osu_username': 'Diony',
-            'discord_id': 81316514216554496,
-            'discord_user': self.bot.get_user(81316514216554496)
-        })
-
         lost_users = [user for user in nonsigned_users if user['discord_user'] is None]
         found_users = [user for user in nonsigned_users if user['discord_user'] is not None]
         if lost_users:
