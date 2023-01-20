@@ -1,10 +1,14 @@
 import re
+from datetime import date
+from io import StringIO
+
 import discord
 from asyncpg import RaiseError
+from discord import File
 from discord.ext import commands
 from discord.ext.commands import BucketType
-from datetime import date
-from utility_funcs import get_exposed_settings, is_channel, res_cog, confirm
+
+from utility_funcs import confirm, get_exposed_settings, is_channel, res_cog
 
 
 class QualifiersCog(commands.Cog):
@@ -238,15 +242,38 @@ class QualifiersCog(commands.Cog):
             return
         async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
-                nonsigned_discord_ids = await conn.fetch('''select discord_id from players natural join (select osu_id from players except select osu_id from lobby_signups) as i;''')
-        nonsigned_discord_ids = [record['discord_id'] for record in nonsigned_discord_ids]
-        nonsigned_users = [self.bot.get_user(id) for id in nonsigned_discord_ids]
-        if None in nonsigned_users:
-            await ctx.send('Failed to find at least one of the pingees by discord id.', delete_after=7)
+                nonsigned_records = await conn.fetch('''select * from players natural join (select osu_id from players except select osu_id from lobby_signups) as i;''')
+
+        # Convert query results into list of dictionaries
+        nonsigned_users = []
+        for record in nonsigned_records:
+            nonsigned_users.append({
+                'osu_id': record['osu_id'],
+                'osu_username': record['osu_username'],
+                'discord_id': record['discord_id'],
+                'discord_user': self.bot.get_user(record['discord_id'])
+            })
+
+        # # TODO: remove this
+        nonsigned_users.append({
+            'osu_id': '123',
+            'osu_username': 'Diony',
+            'discord_id': 81316514216554496,
+            'discord_user': self.bot.get_user(81316514216554496)
+        })
+
+        lost_users = [user for user in nonsigned_users if user['discord_user'] is None]
+        found_users = [user for user in nonsigned_users if user['discord_user'] is not None]
+        if lost_users:
+            await ctx.send(f'Failed to find {"any" if len(found_users) <= 0 else len(lost_users)} of the pingees by discord id. Raw details:', delete_after=15,
+                           file=File(fp=StringIO(str(lost_users)), filename='missing_users.txt'))
+
+        if len(found_users) <= 0:
             return
-        confirmed = await confirm(ctx, f'This will append your message (minus the command) with the pings of {len(nonsigned_users)} people. React with the tick to confirm within {20} seconds.')
+
+        confirmed = await confirm(f'Confirm send? This will ping {len(found_users)} people with your message. React with the tick to confirm within {20} seconds.', ctx)
         if confirmed:
-            pings = ' '.join([user.mention for user in nonsigned_users])
+            pings = ' '.join([user['discord_user'].mention for user in found_users])
             await ctx.send(f'{content}\n{pings}')
 
     @commands.command()
