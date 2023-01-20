@@ -61,6 +61,11 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
+    async def purge(self, ctx, limit: int):
+        await ctx.channel.purge(limit=limit)
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
     async def settings(self, ctx):
         data = _get_settings()
 
