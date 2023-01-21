@@ -19,6 +19,7 @@ initial_extensions = ['cogs.' + name for name in [
 async def main():
     intents = discord.Intents.default()
     intents.members = True
+    intents.message_content = True
     bot = commands.Bot(command_prefix='!', intents=intents)
     for extension in initial_extensions:
         await bot.load_extension(extension)
