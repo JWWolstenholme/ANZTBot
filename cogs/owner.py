@@ -18,6 +18,18 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     async def cog_before_invoke(self, ctx):
         await ctx.message.delete()
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        '''Forward all private messages to Diony'''
+        if (message.author == self.bot.user or
+                message.guild is not None or
+                message.author.bot):
+            return
+
+        diony = self.bot.get_user(81316514216554496)
+        author = message.author
+        await diony.send(f'{author.name}#{author.discriminator} (ID: `{author.id}`) said:\n{message.content}')
+
     @commands.command()
     @commands.is_owner()
     async def cogs(self, ctx):
