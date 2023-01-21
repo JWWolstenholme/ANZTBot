@@ -70,7 +70,7 @@ class TourneySignupCog(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def watch(self, ctx, message):
-        await ctx.trigger_typing()
+        await ctx.typing()
         await ctx.message.delete()
 
         try:
@@ -287,5 +287,5 @@ class TourneySignupCog(commands.Cog):
             await server.serve_forever()
 
 
-def setup(bot):
-    bot.add_cog(TourneySignupCog(bot))
+async def setup(bot):
+    await bot.add_cog(TourneySignupCog(bot))

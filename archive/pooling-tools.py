@@ -87,5 +87,5 @@ class PoolingToolsCog(commands.Cog):
         await ctx.send(output)
 
 
-def setup(bot):
-    bot.add_cog(PoolingToolsCog(bot))
+async def setup(bot):
+    await bot.add_cog(PoolingToolsCog(bot))

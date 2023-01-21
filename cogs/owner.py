@@ -28,7 +28,7 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.is_owner()
     async def load(self, ctx, *, cog: str):
         try:
-            self.bot.load_extension(cog)
+            await self.bot.load_extension(cog)
         except Exception as e:
             await self.error(ctx, e)
         else:
@@ -38,7 +38,7 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.is_owner()
     async def unload(self, ctx, *, cog: str):
         try:
-            self.bot.unload_extension(cog)
+            await self.bot.unload_extension(cog)
         except Exception as e:
             await self.error(ctx, e)
         else:
@@ -48,7 +48,7 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.is_owner()
     async def reload(self, ctx, *, cog: str):
         try:
-            self.bot.reload_extension(cog)
+            await self.bot.reload_extension(cog)
         except Exception as e:
             await self.error(ctx, e)
         else:
@@ -57,7 +57,7 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.command()
     @commands.is_owner()
     async def logout(self, ctx):
-        await self.bot.logout()
+        await self.bot.close()
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -93,5 +93,5 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
             await ctx.send(f'{ctx.author.mention} There was an error setting that setting.', delete_after=self.delete_delay)
 
 
-def setup(bot):
-    bot.add_cog(OwnerCog(bot))
+async def setup(bot):
+    await bot.add_cog(OwnerCog(bot))

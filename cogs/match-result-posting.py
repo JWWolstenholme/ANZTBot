@@ -258,5 +258,5 @@ class MatchResultPostingCog(commands.Cog):
                 await message.channel.send(f'{message.author.mention} Couldn\'t post to the results channel. ping diony', delete_after=self.delete_delay)
 
 
-def setup(bot):
-    bot.add_cog(MatchResultPostingCog(bot))
+async def setup(bot):
+    await bot.add_cog(MatchResultPostingCog(bot))

@@ -24,7 +24,7 @@ class TwitchAndPickemsCog(commands.Cog):
         self.check_if_live.cancel()
 
     async def cog_before_invoke(self, ctx):
-        await ctx.message.channel.trigger_typing()
+        await ctx.message.channel.typing()
 
     @tasks.loop(seconds=22)
     async def check_if_live(self):
@@ -81,7 +81,7 @@ class TwitchAndPickemsCog(commands.Cog):
         anzt = self.bot.get_guild(199158455888642048)
         anzt_channel = anzt.get_channel(945236506547728414)
         pingrole = [role for role in anzt.roles if role.name == 'Stream Ping'][0]
-        await pingrole.edit(mentionable=True)
+        pingrole = await pingrole.edit(mentionable=True)
         await anzt_channel.send(f'{pingrole.mention}', embed=embed)
         await pingrole.edit(mentionable=False)
 
@@ -105,5 +105,5 @@ class TwitchAndPickemsCog(commands.Cog):
             await ctx.send(f'{ctx.author.mention}, Gave you the `{rolename}` role.')
 
 
-def setup(bot):
-    bot.add_cog(TwitchAndPickemsCog(bot))
+async def setup(bot):
+    await bot.add_cog(TwitchAndPickemsCog(bot))
