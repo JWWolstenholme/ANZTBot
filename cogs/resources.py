@@ -50,5 +50,5 @@ class ResourcesCog(commands.Cog):
         return scoped
 
 
-def setup(bot):
-    bot.add_cog(ResourcesCog(bot))
+async def setup(bot):
+    await bot.add_cog(ResourcesCog(bot))

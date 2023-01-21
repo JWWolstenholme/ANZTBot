@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from discord.ext import commands
 
@@ -13,12 +15,14 @@ initial_extensions = ['cogs.' + name for name in [
     'qualifiers'
 ]]
 
-if __name__ == '__main__':
+
+async def main():
     intents = discord.Intents.default()
     intents.members = True
+    intents.message_content = True
     bot = commands.Bot(command_prefix='!', intents=intents)
     for extension in initial_extensions:
-        bot.load_extension(extension)
+        await bot.load_extension(extension)
         print(f'Loaded \'{extension}\'')
 
     @bot.event
@@ -34,4 +38,8 @@ if __name__ == '__main__':
         except KeyError:
             return
 
-    bot.run(get_setting("discord.py", "bot_token"))
+    async with bot:
+        await bot.start(get_setting("discord.py", "bot_token"))
+
+if __name__ == '__main__':
+    asyncio.run(main())

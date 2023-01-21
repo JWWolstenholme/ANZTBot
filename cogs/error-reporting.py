@@ -72,5 +72,5 @@ class ErrorReportingCog(commands.Cog):
             await self.diochannel.send(output)
 
 
-def setup(bot):
-    bot.add_cog(ErrorReportingCog(bot))
+async def setup(bot):
+    await bot.add_cog(ErrorReportingCog(bot))

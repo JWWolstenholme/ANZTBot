@@ -37,7 +37,7 @@ class QualifiersCog(commands.Cog):
     async def lobby(self, ctx, lobby_id: int):
         await ctx.message.delete()
         id = ctx.author.id
-        await ctx.trigger_typing()
+        await ctx.typing()
         async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 player = await conn.fetchrow('''select * from players where discord_id=$1''', id)
@@ -72,7 +72,7 @@ class QualifiersCog(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def refresh_sheet(self, ctx):
         await ctx.message.delete()
-        await ctx.trigger_typing()
+        await ctx.typing()
 
         await self.update_ref_sheet()
 
@@ -119,7 +119,7 @@ class QualifiersCog(commands.Cog):
     @commands.cooldown(1, 6, BucketType.channel)
     async def signup(self, ctx, osu_username: str, lobby_id: int):
         await ctx.message.delete()
-        await ctx.trigger_typing()
+        await ctx.typing()
         async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 player = await conn.fetchrow('''select * from players where osu_username ilike $1''', osu_username)
@@ -153,7 +153,7 @@ class QualifiersCog(commands.Cog):
     @is_channel('qualifiers')
     @commands.has_permissions(administrator=True)
     async def placeholders(self, ctx):
-        await ctx.trigger_typing()
+        await ctx.typing()
         await ctx.message.delete()
         # remove previous messages
         async with (await self._connpool()).acquire() as conn:
@@ -186,7 +186,7 @@ class QualifiersCog(commands.Cog):
     @is_channel('qualifiers')
     @commands.cooldown(1, 20, BucketType.channel)
     async def refresh(self, ctx):
-        await ctx.trigger_typing()
+        await ctx.typing()
         await ctx.message.delete()
         await self.update_lobbies(ctx)
 
@@ -233,7 +233,7 @@ class QualifiersCog(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True)
     async def pingunsigned(self, ctx):
-        await ctx.trigger_typing()
+        await ctx.typing()
         # Get everything after the command
         content = ctx.message.content.lstrip(ctx.prefix + ctx.invoked_with + ' ')
         await ctx.message.delete()
@@ -272,7 +272,7 @@ class QualifiersCog(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def unsigned(self, ctx):
         await ctx.message.delete()
-        await ctx.trigger_typing()
+        await ctx.typing()
         async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
                 nonsigned_records = await conn.fetch('''select osu_username from players natural join (select osu_id from players except select osu_id from lobby_signups) as i;''')
@@ -281,5 +281,5 @@ class QualifiersCog(commands.Cog):
         await ctx.send(f'{len(nonsigned_osu_usernames)} players have not yet signed up. ```{user_list}```')
 
 
-def setup(bot):
-    bot.add_cog(QualifiersCog(bot))
+async def setup(bot):
+    await bot.add_cog(QualifiersCog(bot))
