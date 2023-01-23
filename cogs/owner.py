@@ -1,5 +1,7 @@
-from discord import Embed
+from discord import Embed, Member
 from discord.ext import commands
+from discord.ext.commands import MemberConverter, MemberNotFound
+
 from utility_funcs import _get_settings, is_channel, set_exposed_setting
 
 
@@ -29,6 +31,18 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
         diony = self.bot.get_user(81316514216554496)
         author = message.author
         await diony.send(f'{author.name}#{author.discriminator} (ID: `{author.id}`) said:\n{message.content}')
+
+    @commands.command()
+    @commands.is_owner()
+    async def dm(self, ctx, member, *, the_rest):
+        # Consider making converter greedy see (https://discordpy.readthedocs.io/en/stable/ext/commands/commands.html?highlight=converter#greedy) for reference.
+        try:
+            member = await MemberConverter().convert(ctx, member)
+        except MemberNotFound:
+            await ctx.send("Couldn't find a user with what you provided.", delete_after=self.delete_delay)
+            return
+
+        await member.send(the_rest)
 
     @commands.command()
     @commands.is_owner()
