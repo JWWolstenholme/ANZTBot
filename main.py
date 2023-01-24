@@ -12,7 +12,8 @@ initial_extensions = ['cogs.' + name for name in [
     'tourney-signup',
     'twitch-pickem',
     'match-result-posting',
-    'qualifiers'
+    'qualifiers',
+    'amplifiers'
 ]]
 
 
@@ -27,6 +28,8 @@ async def main():
 
     @bot.event
     async def on_ready():
+        await bot.tree.sync()
+        print(f'Synced command tree')
         print(f'Logged in as: {bot.user.name} - {bot.user.id}\nVersion: {discord.__version__}')
 
     @bot.event
