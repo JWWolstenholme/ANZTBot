@@ -53,14 +53,12 @@ class AmplifierDropdownView(discord.ui.View):
         self.add_item(AmplifierDropdown())
 
     def on_error(self, interaction, error, item):
+        # TODO: Handle these errors better. Ideally incorperate interaction errors with the error-reporting cog.
         raise error
 
 
 class AmplifiersCog(commands.Cog):
     def __init__(self, bot):
-        # self.players = [153711384712970240, 81316514216554496]
-        self.players = [81316514216554496]
-        # self.players = [73389450113069056, 690827021713932338]
         self.bot = bot
 
         self.discord_numbers = {
