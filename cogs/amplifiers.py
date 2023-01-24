@@ -18,7 +18,7 @@ class AmplifierDropdown(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         selected_option = int(self.values[0])
 
-        await interaction.response.defer(thinking=True, ephemeral=True)
+        await interaction.response.defer(thinking=True)
 
         connpool = await res_cog(interaction.client).connpool()
 
@@ -57,8 +57,8 @@ class AmplifierDropdownView(discord.ui.View):
 class AmplifiersCog(commands.Cog):
     def __init__(self, bot):
         # self.players = [153711384712970240, 81316514216554496]
-        # self.players = [81316514216554496]
-        self.players = [73389450113069056, 690827021713932338]
+        self.players = [81316514216554496]
+        # self.players = [73389450113069056, 690827021713932338]
         self.bot = bot
 
         self.discord_numbers = {
@@ -108,8 +108,9 @@ class AmplifiersCog(commands.Cog):
 
         preamble = f'Hello! Your options for amplifiers this week are:\n\n'
         for i, option in enumerate(options):
-            preamble += f':{self.discord_numbers[i+1]}: - "{option["amplifier_name"]}"\n'
-        preamble += "\nRefer to the main sheet for amplifier descriptions (https://bit.ly/ANZT10SAmplifierDescriptions)\nYou have until 9pm Thursday 26th (AEDT) to pick one of the below or one of the amplifiers shown below will be selected at random (except lucky dip).\n\nPlease also note, if you reschedule your match to prior to 3am Friday 27th (AEDT), your amplifiers must be locked in 6 hours prior to the match."
+            emote = ":game_die:" if option['amplifier_name'] == "Lucky Dip" else f":{self.discord_numbers[i+1]}:"
+            preamble += f'{emote} - "{option["amplifier_name"]}"\n'
+        preamble += "\nRefer to the main sheet for amplifier descriptions (<https://bit.ly/ANZT10SAmplifierDescriptions>)\nYou have until 9pm Thursday 26th (AEDT) to pick one of the above amplifiers or one of them will be selected at random (except lucky dip).\nPlease also note, if you reschedule your match to prior to 3am Friday 27th (AEDT), your amplifiers must be locked in 6 hours prior to the match."
         try:
             await member.send(preamble, view=view)
             await self.bot_log(f"✅ Sent amplifier options to user with discord_id: {discord_id}, tag: {member.name}#{member.discriminator}")
@@ -118,6 +119,8 @@ class AmplifiersCog(commands.Cog):
 
     async def bot_log(self, text):
         anztguild = self.bot.get_guild(199158455888642048)
+        if anztguild is None:
+            return
         botlogchannel = anztguild.get_channel(731069297295753318)
         await botlogchannel.send(text)
 
