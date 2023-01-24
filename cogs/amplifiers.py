@@ -13,7 +13,7 @@ class AmplifierDropdown(discord.ui.Select):
             discord.SelectOption(label='Amplifier Option Three', description='Third amplifier option provided above', emoji='3️⃣', value=2),
             discord.SelectOption(label='Lucky Dip', description='Give me a random amplifier not listed above', emoji='🎲', value=3)
         ]
-        super().__init__(placeholder='Pick one amplifier...', min_values=1, max_values=1, options=options)
+        super().__init__(placeholder='Pick one amplifier...', min_values=1, max_values=1, options=options, custom_id='amplifier-select-persistent')
 
     async def callback(self, interaction: discord.Interaction):
         selected_option = int(self.values[0])
@@ -40,15 +40,14 @@ class AmplifierDropdown(discord.ui.Select):
                 await conn.execute('''update players_amplifiers set is_picked=True where osu_id=$1 and amplifier_id=$2;''', osu_id, selected_amplifier_record['amplifier_id'])
 
         if selected_amplifier_record['amplifier_id'] == 777:
-            await interaction.followup.send(f"You've picked {selected_amplifier_record['amplifier_name']}. This will be drawn at random once the selection period is over.")
+            await interaction.followup.send(f'You\'ve picked "{selected_amplifier_record["amplifier_name"]}". This will draw you a new amplifier not listed above once the selection period is over.')
         else:
-            await interaction.followup.send(f"You've picked the amplifier {selected_amplifier_record['amplifier_name']}")
+            await interaction.followup.send(f'You\'ve picked the amplifier "{selected_amplifier_record["amplifier_name"]}"')
 
 
 class AmplifierDropdownView(discord.ui.View):
-    # TODO: Make this view persisitent as per (https://github.com/Rapptz/discord.py/blob/master/examples/views/persistent.py)
     def __init__(self):
-        super().__init__()
+        super().__init__(timeout=None)
         self.add_item(AmplifierDropdown())
 
     def on_error(self, interaction, error, item):
@@ -58,7 +57,8 @@ class AmplifierDropdownView(discord.ui.View):
 class AmplifiersCog(commands.Cog):
     def __init__(self, bot):
         # self.players = [153711384712970240, 81316514216554496]
-        self.players = [81316514216554496]
+        # self.players = [81316514216554496]
+        self.players = [73389450113069056, 690827021713932338]
         self.bot = bot
 
         self.discord_numbers = {
@@ -72,6 +72,8 @@ class AmplifiersCog(commands.Cog):
             8: "eight",
             9: "nine"
         }
+
+        self.bot.add_view(AmplifierDropdownView())
 
     async def _connpool(self):
         return await res_cog(self.bot).connpool()
@@ -104,11 +106,20 @@ class AmplifiersCog(commands.Cog):
                     where discord_id=$1
                     order by amplifier_id asc;''', member.id)
 
-        preamble = f'Your options for amplifiers this week are:\n\n'
+        preamble = f'Hello! Your options for amplifiers this week are:\n\n'
         for i, option in enumerate(options):
             preamble += f':{self.discord_numbers[i+1]}: - "{option["amplifier_name"]}"\n'
-        preamble += "\nYou have until Wednesday at 5pm to pick one of the below or one of the amplifiers will be selected at random (not lucky dip)."
-        await member.send(preamble, view=view)
+        preamble += "\nRefer to the main sheet for amplifier descriptions (https://bit.ly/ANZT10SAmplifierDescriptions)\nYou have until 9pm Thursday 26th (AEDT) to pick one of the below or one of the amplifiers shown below will be selected at random (except lucky dip).\n\nPlease also note, if you reschedule your match to prior to 3am Friday 27th (AEDT), your amplifiers must be locked in 6 hours prior to the match."
+        try:
+            await member.send(preamble, view=view)
+            await self.bot_log(f"✅ Sent amplifier options to user with discord_id: {discord_id}, tag: {member.name}#{member.discriminator}")
+        except discord.errors.Forbidden:
+            await self.bot_log(f"❌ Failed to send amplifier options to user with discord_id: {discord_id}, tag: {member.name}#{member.discriminator}")
+
+    async def bot_log(self, text):
+        anztguild = self.bot.get_guild(199158455888642048)
+        botlogchannel = anztguild.get_channel(731069297295753318)
+        await botlogchannel.send(text)
 
 
 async def setup(bot):
