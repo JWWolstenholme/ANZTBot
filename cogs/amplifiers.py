@@ -8,16 +8,41 @@ from utility_funcs import res_cog
 class AmplifierDropdown(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label='Amplifier Option One', description='First amplifier option provided above', emoji='1️⃣'),
-            discord.SelectOption(label='Amplifier Option Two', description='Second amplifier option provided above', emoji='2️⃣'),
-            discord.SelectOption(label='Amplifier Option Three', description='Third amplifier option provided above', emoji='3️⃣'),
-            discord.SelectOption(label='Lucky Dip', description='Give me a random amplifier not listed above', emoji='🎲'),
+            discord.SelectOption(label='Amplifier Option One', description='First amplifier option provided above', emoji='1️⃣', value=0),
+            discord.SelectOption(label='Amplifier Option Two', description='Second amplifier option provided above', emoji='2️⃣', value=1),
+            discord.SelectOption(label='Amplifier Option Three', description='Third amplifier option provided above', emoji='3️⃣', value=2),
+            discord.SelectOption(label='Lucky Dip', description='Give me a random amplifier not listed above', emoji='🎲', value=3)
         ]
         super().__init__(placeholder='Pick one amplifier...', min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        # TODO: persist user's choice (self.values[0]) in database and spit back to the user
-        await interaction.response.send_message(f"You've picked the amplifier \"TODO\"")
+        selected_option = int(self.values[0])
+
+        await interaction.response.defer(thinking=True, ephemeral=True)
+
+        connpool = await res_cog(interaction.client).connpool()
+
+        async with connpool.acquire() as conn:
+            async with conn.transaction():
+                # Convert user's discord id to their osu! ID.
+                osu_id = int(await conn.fetchval('''select osu_id from players where discord_id=$1;''', interaction.user.id))
+                # Reset their current picks TODO: Make sure this doesn't mess up future weeks where there will be multiple picks
+                await conn.execute('''update players_amplifiers set is_picked=False where osu_id=$1;''', osu_id)
+                # Convert the users picked option to it's corresponding amplifier
+                options = await conn.fetch('''
+                    select amplifier_id, amplifier_name from players_amplifiers
+                        natural left join players
+                        natural left join amplifiers
+                        where discord_id=$1
+                        order by amplifier_id asc;''', interaction.user.id)
+                selected_amplifier_record = options[selected_option]
+                # Set the picked amplifiers as picked
+                await conn.execute('''update players_amplifiers set is_picked=True where osu_id=$1 and amplifier_id=$2;''', osu_id, selected_amplifier_record['amplifier_id'])
+
+        if selected_amplifier_record['amplifier_id'] == 777:
+            await interaction.followup.send(f"You've picked {selected_amplifier_record['amplifier_name']}. This will be drawn at random once the selection period is over.")
+        else:
+            await interaction.followup.send(f"You've picked the amplifier {selected_amplifier_record['amplifier_name']}")
 
 
 class AmplifierDropdownView(discord.ui.View):
@@ -26,10 +51,14 @@ class AmplifierDropdownView(discord.ui.View):
         super().__init__()
         self.add_item(AmplifierDropdown())
 
+    def on_error(self, interaction, error, item):
+        raise error
+
 
 class AmplifiersCog(commands.Cog):
     def __init__(self, bot):
-        self.players = [153711384712970240, 81316514216554496]
+        # self.players = [153711384712970240, 81316514216554496]
+        self.players = [81316514216554496]
         self.bot = bot
 
         self.discord_numbers = {
@@ -69,7 +98,7 @@ class AmplifiersCog(commands.Cog):
 
         async with (await self._connpool()).acquire() as conn:
             options = await conn.fetch('''
-                select amplifier_name from amplifier_picks
+                select amplifier_name from players_amplifiers
                     natural left join players
                     natural left join amplifiers
                     where discord_id=$1
