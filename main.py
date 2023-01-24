@@ -28,8 +28,9 @@ async def main():
 
     @bot.event
     async def on_ready():
-        print(f'Logged in as: {bot.user.name} - {bot.user.id}\nVersion: {discord.__version__}')
         await bot.tree.sync()
+        print(f'Synced command tree')
+        print(f'Logged in as: {bot.user.name} - {bot.user.id}\nVersion: {discord.__version__}')
 
     @bot.event
     async def on_error(event, *args, **kwargs):

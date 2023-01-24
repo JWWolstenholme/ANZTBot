@@ -1,6 +1,8 @@
+import asyncio
+
 import discord
-from discord.ext import commands
 from discord.app_commands import MissingPermissions
+from discord.ext import commands
 
 from utility_funcs import res_cog
 
@@ -80,15 +82,16 @@ class AmplifiersCog(commands.Cog):
 
     @discord.app_commands.command()
     @discord.app_commands.checks.has_permissions(administrator=True)
-    async def trigger(self, interaction: discord.Interaction):
-        # TODO: automate the retreival and sending of messages to players
+    async def request_pick(self, interaction: discord.Interaction, discord_ids: str, delay_seconds: int):
+        ids = discord_ids.split('|')
         await interaction.response.defer(thinking=True, ephemeral=True)
-        for player in self.players:
-            await self.send_amplifier_options(player)
+        for i in ids:
+            await self.send_amplifier_options(int(i))
+            await asyncio.sleep(delay=delay_seconds)
         await interaction.followup.send('done', ephemeral=True)
 
-    @trigger.error
-    async def trigger_error(self, interaction, error):
+    @request_pick.error
+    async def request_pick_error(self, interaction, error):
         if isinstance(error, MissingPermissions):
             await interaction.response.send_message('You don\'t have permission to use that command.', ephemeral=True)
         else:
