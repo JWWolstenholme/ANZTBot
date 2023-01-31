@@ -4,7 +4,7 @@ import discord
 from discord.app_commands import MissingPermissions
 from discord.ext import commands
 
-from utility_funcs import res_cog
+from utility_funcs import get_setting, res_cog
 
 
 class AmplifierDropdown(discord.ui.Select):
@@ -24,22 +24,25 @@ class AmplifierDropdown(discord.ui.Select):
 
         connpool = await res_cog(interaction.client).connpool()
 
+        week_no = get_setting('amplifiers', 'week_number')
+
         async with connpool.acquire() as conn:
             async with conn.transaction():
                 # Convert user's discord id to their osu! ID.
                 osu_id = int(await conn.fetchval('''select osu_id from players where discord_id=$1;''', interaction.user.id))
                 # Reset their current picks TODO: Make sure this doesn't mess up future weeks where there will be multiple picks
-                await conn.execute('''update players_amplifiers set is_picked=False where osu_id=$1;''', osu_id)
+                await conn.execute('''update players_amplifiers set is_picked=False where osu_id=$1 and week=$2;''', osu_id, week_no)
                 # Convert the users picked option to it's corresponding amplifier
                 options = await conn.fetch('''
                     select amplifier_id, amplifier_name from players_amplifiers
                         natural left join players
                         natural left join amplifiers
                         where discord_id=$1
-                        order by amplifier_id asc;''', interaction.user.id)
+                        and players_amplifiers.week=$2
+                        order by amplifier_id asc;''', interaction.user.id, week_no)
                 selected_amplifier_record = options[selected_option]
                 # Set the picked amplifiers as picked
-                await conn.execute('''update players_amplifiers set is_picked=True where osu_id=$1 and amplifier_id=$2;''', osu_id, selected_amplifier_record['amplifier_id'])
+                await conn.execute('''update players_amplifiers set is_picked=True where osu_id=$1 and amplifier_id=$2 and week=$3;''', osu_id, selected_amplifier_record['amplifier_id'], week_no)
 
         if selected_amplifier_record['amplifier_id'] == 777:
             await interaction.followup.send(f'You\'ve picked "{selected_amplifier_record["amplifier_name"]}". This will draw you a new amplifier not listed above once the selection period is over.')
@@ -99,13 +102,16 @@ class AmplifiersCog(commands.Cog):
         view = AmplifierDropdownView()
         member = self.bot.get_user(discord_id)
 
+        week_no = get_setting('amplifiers', 'week_number')
+
         async with (await self._connpool()).acquire() as conn:
             options = await conn.fetch('''
                 select amplifier_name from players_amplifiers
                     natural left join players
                     natural left join amplifiers
                     where discord_id=$1
-                    order by amplifier_id asc;''', member.id)
+                    and players_amplifiers.week=$2
+                    order by amplifier_id asc;''', member.id, week_no)
 
         preamble = f'Hello! Your options for amplifiers this week are:\n\n'
         for i, option in enumerate(options):
