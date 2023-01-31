@@ -36,6 +36,13 @@ Includes a command to opt-in or out of receiving these pings by giving or removi
 
 ![Screenshot of bot's message in discord](images/stream-ping.png)
 
+### ANZT10S Amplifier Seletion
+See [`amplifiers.py`](cogs/amplifiers.py) for implementation.
+
+The tournament ANZT10S featured a custom gimmick where users could choose at least one modifier to their matches each week. This cog allowed ANZTBot to message each player their options each week, providing a dropdown for users to select their chosen amplifier(s).
+
+![Screenshot of bot's message in discord](images/amplifier_selection.gif)
+
 ### Discord Error reporting
 See [`error-reporting.py`](cogs/error-reporting.py) for implementation.
 
