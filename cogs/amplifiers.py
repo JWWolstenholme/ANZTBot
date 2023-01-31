@@ -34,11 +34,11 @@ class AmplifierDropdown(discord.ui.Select):
                 await conn.execute('''update players_amplifiers set is_picked=False where osu_id=$1 and week=$2;''', osu_id, week_no)
                 # Convert the users picked option to it's corresponding amplifier
                 options = await conn.fetch('''
-                    select amplifier_id, amplifier_name from players_amplifiers
+                    select pa.amplifier_id, amplifier_name from players_amplifiers as pa
                         natural left join players
-                        natural left join amplifiers
+                        left join amplifiers as a on pa.amplifier_id = a.amplifier_id
                         where discord_id=$1
-                        and players_amplifiers.week=$2
+                        and pa.week=$2
                         order by amplifier_id asc;''', interaction.user.id, week_no)
                 selected_amplifier_record = options[selected_option]
                 # Set the picked amplifiers as picked
@@ -106,11 +106,11 @@ class AmplifiersCog(commands.Cog):
 
         async with (await self._connpool()).acquire() as conn:
             options = await conn.fetch('''
-                select amplifier_name from players_amplifiers
+                select pa.amplifier_id, amplifier_name from players_amplifiers as pa
                     natural left join players
-                    natural left join amplifiers
+                    left join amplifiers as a on pa.amplifier_id = a.amplifier_id
                     where discord_id=$1
-                    and players_amplifiers.week=$2
+                    and pa.week=$2
                     order by amplifier_id asc;''', member.id, week_no)
 
         preamble = f'Hello! Your options for amplifiers this week are:\n\n'
