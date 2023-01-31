@@ -117,7 +117,7 @@ class AmplifiersCog(commands.Cog):
         for i, option in enumerate(options):
             emote = ":game_die:" if option['amplifier_name'] == "Lucky Dip" else f":{self.discord_numbers[i+1]}:"
             preamble += f'{emote} - "{option["amplifier_name"]}"\n'
-        preamble += "\nRefer to the main sheet for amplifier descriptions (<https://bit.ly/ANZT10SAmplifierDescriptions>)\nYou have until 9pm Thursday 26th (AEDT) to pick one of the above amplifiers or one of them will be selected at random (except lucky dip).\nPlease also note, if you reschedule your match to prior to 3am Friday 27th (AEDT), your amplifiers must be locked in 6 hours prior to the match."
+        preamble += "\nRefer to the main sheet for amplifier descriptions (<https://bit.ly/ANZT10SAmplifierDescriptions>)\nYou have until 11:59pm Wednesday 1st (AEDT) to pick one of the above amplifiers or one of them will be selected at random (except lucky dip).\nPlease also note, if you reschedule your match to prior to 6am Thursday 2nd (AEDT), your amplifiers must be locked in 6 hours prior to the match."
         try:
             await member.send(preamble, view=view)
             await self.bot_log(f"✅ Sent amplifier options to user with discord_id: {discord_id}, tag: {member.name}#{member.discriminator}")
