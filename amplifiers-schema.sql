@@ -7,6 +7,7 @@ create table amplifiers (
     amplifier_id numeric(3) primary key,
     amplifier_name text not null,
     is_disabled boolean not null default false,
+    is_active boolean not null default false,
     week numeric(2)
 );
 -- insert into amplifiers values (2, 'Dude That Fingerlock'),(3, 'Old School Cool'),(4, 'Right On Time'),(5, 'Limit Break'),(6, 'Cold Clear Eyes'),(7, 'Chance Time'),(9, 'The Greatest Defence'),(18, 'Classic Farmer'),(25, 'Threes A Crowd'),(777, 'Lucky Dip');
