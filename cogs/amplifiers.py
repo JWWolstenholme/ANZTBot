@@ -82,9 +82,9 @@ class AmplifierDropdownView(discord.ui.View):
         self.add_item(PassiveAmplifierDropdown())
         self.add_item(ActiveAmplifierDropdown())
 
-    def on_error(self, interaction, error, item):
-        # TODO: Handle these errors better. Ideally incorperate interaction errors with the error-reporting cog.
-        raise error
+    async def on_error(self, interaction, error, item):
+        errorcog = interaction.client.get_cog('ErrorReportingCog')
+        await errorcog.on_error('anzt.amplifiers.dropdown')
 
 
 class AmplifiersCog(commands.Cog):
