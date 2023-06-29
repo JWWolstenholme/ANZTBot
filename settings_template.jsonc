@@ -82,7 +82,9 @@
             // Displayed to users when sent their signup link
             "signup_close_date": "",
 			"acronym": "ANZT9S",
-            "signups_open": "Y"
+            "signups_open": "Y",
+            // List of discord IDs seperated by a pipe (|)
+            "permitted_foreign_users": ""
         }
     },
     "postgresql": {
