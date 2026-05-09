@@ -285,7 +285,7 @@ class TourneySignupCog(commands.Cog):
 
     async def _run_quart_server(self):
         try:
-            await quart_app.run_task(host='127.0.0.1', port=5000)
+            await quart_app.run_task(host='0.0.0.0', port=5000)
         except asyncio.CancelledError:
             print('Quart server shut down')
 
