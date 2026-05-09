@@ -1,44 +1,30 @@
-import asyncio
-from flask import Flask, request, render_template
-import pickle
-app = Flask(__name__, template_folder='pages/templates', static_folder='pages/static')
+from quart import Quart, request, render_template
+
+app = Quart(__name__, template_folder='pages/templates', static_folder='pages/static')
+
+# Reference to the signup handler, set by the tourney-signup cog
+_signup_handler = None
 
 
-async def communicate_with_ANZTbot(state, code):
-    reader, writer = await asyncio.open_connection(
-        "127.0.0.1", 7865)
-
-    print(f"Sending state & code")
-    data = {
-        'state': state,
-        'code': code
-    }
-    writer.write(pickle.dumps(data))
-    writer.write_eof()
-    await writer.drain()
-
-    result = await reader.read()
-    addr = writer.get_extra_info('peername')
-    print(f"Received {result!r} from {addr!r}")
-    print("Closing connection")
-    writer.close()
-
-    result = pickle.loads(result)
-    return render_template('index.html', success=result['success'], message=result['message'])
+def set_signup_handler(handler):
+    global _signup_handler
+    _signup_handler = handler
 
 
 @app.route("/")
-def hello():
+async def hello():
     state = request.args.get('state')
     code = request.args.get('code')
     if None in [state, code]:
-        return render_template('index.html', success=False, message="Incorrect URL arguments")
+        return await render_template('index.html', success=False, message="Incorrect URL arguments")
+    
+    if _signup_handler is None:
+        return await render_template('index.html', success=False, message="Signup handler not initialized")
+    
     try:
-        # Using async here is bad practice. A library like https://pypi.org/project/Quart/ would be more suitable.
-        return asyncio.run(communicate_with_ANZTbot(state, code))
-    except ConnectionRefusedError:
-        return render_template('index.html', success=False, message="Couldn't communicate with ANZTbot")
-
-
-if __name__ == "__main__":
-    app.run()
+        # Pass the state & code to the bot to process and display result
+        result = await _signup_handler(state, code)
+        return await render_template('index.html', success=result['success'], message=result['message'])
+    except Exception as e:
+        print(f"Error in signup handler: {e}")
+        return await render_template('index.html', success=False, message="An error occurred during signup")
