@@ -18,7 +18,8 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
         await ctx.send('Success', delete_after=self.delete_delay)
 
     async def cog_before_invoke(self, ctx):
-        await ctx.message.delete()
+        if ctx.guild is not None:
+            await ctx.message.delete()
 
     @commands.Cog.listener()
     async def on_message(self, message):

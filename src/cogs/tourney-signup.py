@@ -24,12 +24,14 @@ class TourneySignupCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         '''Deletes unnecessary messages in the registration channel'''
-        if message.author == self.bot.user:
+        if (message.author == self.bot.user or              # Bot message
+            message.guild is None or                        # User DM
+            message.channel.name not in ['register']):      # Unrelated channel
             return
-        if message.channel.name in ['register']:
-            if message.content != '!register':
-                await message.delete()
-                return
+        
+        if message.content != '!register':
+            await message.delete()
+            return
 
     @commands.command()
     async def register(self, ctx):
@@ -39,6 +41,9 @@ class TourneySignupCog(commands.Cog):
         else:
             await ctx.message.add_reaction('❌')
             await ctx.send(f'{ctx.author.mention} I\'ve already sent you a dm', delete_after=self.delete_delay)
+
+        if ctx.guild is None:
+            return
 
         await asyncio.sleep(7)
 
