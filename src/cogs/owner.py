@@ -1,8 +1,8 @@
-from discord import Embed, Member
+from discord import Embed
 from discord.ext import commands
 from discord.ext.commands import MemberConverter, MemberNotFound
 
-from utility_funcs import _get_settings, is_channel, set_exposed_setting
+from utility_funcs import _get_settings, set_exposed_setting
 
 
 class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
@@ -18,19 +18,22 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
         await ctx.send('Success', delete_after=self.delete_delay)
 
     async def cog_before_invoke(self, ctx):
-        await ctx.message.delete()
+        if ctx.guild is not None:
+            await ctx.message.delete()
 
     @commands.Cog.listener()
     async def on_message(self, message):
         '''Forward all private messages to Diony'''
-        if (message.author == self.bot.user or
-                message.guild is not None or
-                message.author.bot):
-            return
-
         diony = self.bot.get_user(81316514216554496)
         author = message.author
-        await diony.send(f'{author.name}#{author.discriminator} (ID: `{author.id}`) said:\n{message.content}')
+
+        if (author == self.bot.user or          # Bot message
+            author == diony or                  # Diony message
+            message.guild is not None):         # Not a DM
+            return
+
+        files = [await attachment.to_file(spoiler=attachment.is_spoiler()) for attachment in message.attachments]
+        await diony.send(f'{author.global_name} ({author.id}) said:\n{message.content}', files=files)
 
     @commands.command()
     @commands.is_owner()
@@ -43,6 +46,13 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
             return
 
         await member.send(the_rest)
+
+    @commands.command()
+    @commands.is_owner()
+    async def say(self, ctx, *, the_rest=""):
+        if not the_rest.strip():
+            return
+        await ctx.send(the_rest)
 
     @commands.command()
     @commands.is_owner()

@@ -20,6 +20,11 @@ class ErrorReportingCog(commands.Cog):
         # self.diony = self.dioguild.get_member(81316514216554496).mention
         self.diony = (await self.dioguild.query_members(user_ids=[81316514216554496]))[0].mention
 
+    @commands.command()
+    @commands.is_owner()
+    async def error(self, ctx):
+        raise Exception("Generic test exception")
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         e_class = error.__class__
@@ -47,7 +52,7 @@ class ErrorReportingCog(commands.Cog):
 
     async def context_report(self, ctx, error=None):
         output = (f'{self.diony}\n\n{ctx.author.display_name} said `{ctx.message.content}` '
-                  f'in `#{ctx.channel}` of `{ctx.guild.name}` which caused:``````')
+                  f'in `#{ctx.channel}`{'' if ctx.guild is None else f' of `{ctx.guild.name}`'} which caused:``````')
         await self.add_traceback(output, error)
 
     async def general_report(self, event):
