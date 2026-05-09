@@ -40,8 +40,8 @@ class ResourcesCog(commands.Cog):
         return self.requests_session
 
     def _get_creds(self):
-        # Looks up two directories from this file. OS and launch location independant.
-        client_secret = path.join(path.dirname(__file__), '..', '..', 'client_secret.json')
+        # Looks up two directories from this file, then config/client_secret.json. OS and launch location independant.
+        client_secret = path.join(path.dirname(__file__), '..', '..', 'config', 'client_secret.json')
         creds = Credentials.from_service_account_file(client_secret)
         scoped = creds.with_scopes([
             "https://www.googleapis.com/auth/spreadsheets",

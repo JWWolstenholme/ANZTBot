@@ -1,6 +1,7 @@
 import asyncio
 import json
 import re
+from os import path
 
 from discord.ext import commands
 
@@ -13,7 +14,8 @@ def res_cog(bot):
     raise commands.ExtensionNotFound(cog_name)
 
 
-settings_file = 'settings.jsonc'
+# Looks up one directory from this file, then to config/settings.jsonc. OS and launch location independant.
+settings_file = path.join(path.dirname(__file__), '..', 'config', 'settings.jsonc')
 
 
 def _get_settings():

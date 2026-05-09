@@ -5,7 +5,5 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      # Mount config files
-      - ./settings.jsonc:/app/settings.jsonc:ro
-      - ./client_secret.json:/app/client_secret.json:ro
+      - ./config/:/app/config/
     restart: on-failure:3
