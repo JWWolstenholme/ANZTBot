@@ -251,14 +251,15 @@ class TourneySignupCog(commands.Cog):
 
     async def give_participant_role(self, discord_id):
         # ANZT server
-        # anztguild = self.bot.get_guild(199158455888642048)
-        # member = anztguild.get_member(int(discord_id))
-        # role = anztguild.get_role(1254307940504965170)
+        anztguild = self.bot.get_guild(199158455888642048)
+        member = anztguild.get_member(int(discord_id))
+        role = anztguild.get_role(1502690803779239989)
         
         # Test server
-        anztguild = self.bot.get_guild(255990138289651713)
-        member = anztguild.get_member(int(discord_id))
-        role = anztguild.get_role(1502604438203011082)
+        # anztguild = self.bot.get_guild(255990138289651713)
+        # member = anztguild.get_member(int(discord_id))
+        # role = anztguild.get_role(1502604438203011082)
+
         await member.add_roles(role)
 
     @commands.command()
