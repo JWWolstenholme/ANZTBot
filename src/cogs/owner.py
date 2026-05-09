@@ -32,7 +32,8 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
             message.guild is not None):         # Not a DM
             return
 
-        await diony.send(f'{author.name}#{author.discriminator} (ID: `{author.id}`) said:\n{message.content}')
+        files = [await message.to_file(spoiler=message.is_spoiler()) for message in message.attachments]
+        await diony.send(f'{author.global_name} ({author.id}) said:\n{message.content}', files=files)
 
     @commands.command()
     @commands.is_owner()
