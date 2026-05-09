@@ -1,8 +1,8 @@
-from discord import Embed, Member
+from discord import Embed
 from discord.ext import commands
 from discord.ext.commands import MemberConverter, MemberNotFound
 
-from utility_funcs import _get_settings, is_channel, set_exposed_setting
+from utility_funcs import _get_settings, set_exposed_setting
 
 
 class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
@@ -32,7 +32,7 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
             message.guild is not None):         # Not a DM
             return
 
-        files = [await message.to_file(spoiler=message.is_spoiler()) for message in message.attachments]
+        files = [await attachment.to_file(spoiler=attachment.is_spoiler()) for attachment in message.attachments]
         await diony.send(f'{author.global_name} ({author.id}) said:\n{message.content}', files=files)
 
     @commands.command()
@@ -46,6 +46,13 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
             return
 
         await member.send(the_rest)
+
+    @commands.command()
+    @commands.is_owner()
+    async def say(self, ctx, *, the_rest=""):
+        if not the_rest.strip():
+            return
+        await ctx.send(the_rest)
 
     @commands.command()
     @commands.is_owner()
