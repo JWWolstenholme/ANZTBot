@@ -47,7 +47,7 @@ class ErrorReportingCog(commands.Cog):
 
     async def context_report(self, ctx, error=None):
         output = (f'{self.diony}\n\n{ctx.author.display_name} said `{ctx.message.content}` '
-                  f'in `#{ctx.channel}` of `{ctx.guild.name}` which caused:``````')
+                  f'in `#{ctx.channel}`{'' if ctx.guild is None else f'`{ctx.guild.name}`'} which caused:``````')
         await self.add_traceback(output, error)
 
     async def general_report(self, event):
