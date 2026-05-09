@@ -24,13 +24,14 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.Cog.listener()
     async def on_message(self, message):
         '''Forward all private messages to Diony'''
-        if (message.author == self.bot.user or
-                message.guild is not None or
-                message.author.bot):
-            return
-
         diony = self.bot.get_user(81316514216554496)
         author = message.author
+
+        if (author == self.bot.user or          # Bot message
+            author == diony or                  # Diony message
+            message.guild is not None):         # Not a DM
+            return
+
         await diony.send(f'{author.name}#{author.discriminator} (ID: `{author.id}`) said:\n{message.content}')
 
     @commands.command()
