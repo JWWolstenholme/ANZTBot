@@ -1,6 +1,4 @@
 import asyncio
-import pickle
-from datetime import datetime
 
 from asyncpg.exceptions import UniqueViolationError
 from cryptography.fernet import Fernet, InvalidToken
@@ -11,7 +9,7 @@ from discord.ext.commands.converter import MessageConverter
 from discord.ext.commands.errors import CommandInvokeError, MessageNotFound
 from gspread.exceptions import APIError
 from utility_funcs import get_exposed_settings, get_setting, request, res_cog
-
+from server.server import app as quart_app, set_signup_handler
 
 class TourneySignupCog(commands.Cog):
     delete_delay = 10
@@ -140,89 +138,74 @@ class TourneySignupCog(commands.Cog):
         self.prompted_users.append(user.id)
         return True
 
-    async def write(self, writer, success: bool, message: str):
-        data = {
-            'success': success,
-            'message': message
-        }
-        writer.write(pickle.dumps(data))
-        writer.write_eof()
-        await writer.drain()
-
-    async def handler(self, reader, writer):
+    async def process_signup(self, state: str, code: str):
+        """Process the OAuth signup. Returns a dict with 'success' and 'message' keys."""
+        # See https://osu.ppy.sh/docs/index.html?bash#authorization-code-grant for info on the oauth flow.
         try:
-            await self.handle(reader, writer)
-        except Exception:
+            session = await res_cog(self.bot).session()
+            setts = get_setting("tourney-signup")
+
+            # Decrypt the state parameter
+            try:
+                state = Fernet(setts["key"].encode()).decrypt(state.encode()).decode()
+            except InvalidToken:
+                return {'success': False, 'message': "'State' parameter is bad: try asking ANZT bot for another link."}
+
+            # Check if already registered
+            if await self.check_if_registered(state):
+                return {'success': False, 'message': "You're already signed up!"}
+            
+            # Check if signups are open
+            if setts["exposed_settings"]["signups_open"] == "N":
+                return {'success': False, 'message': "Signups have closed!"}
+
+            # Get authorization token from osu!
+            print(f'Using one-time code to get authorization token')
+            token_data = {
+                'client_id': setts["osu_app_client_id"],
+                'client_secret': setts["osu_app_client_secret"],
+                'code': code,
+                'grant_type': 'authorization_code',
+                'redirect_uri': setts["redirect_url"]
+            }
+            async with session.post('https://osu.ppy.sh/oauth/token', data=token_data) as r:
+                if r.status != 200:
+                    print('failed to get authorization token')
+                    return {'success': False, 'message': "Failed to reach osu! servers. Maybe they're down?"}
+                json = await r.json()
+                access_token = json['access_token']
+
+            # Get user info from osu!
+            print('Got access token, using token to get user info')
+            headers = {'Authorization': f'Bearer {access_token}'}
+            async with session.get('https://osu.ppy.sh/api/v2/me/osu', headers=headers) as r:
+                if r.status != 200:
+                    print('failed to get user info')
+                    return {'success': False, 'message': "Failed to reach osu! servers. Maybe they're down?"}
+                json = await r.json()
+                user_country = json['country_code']
+                user_id = json['id']
+            
+            # Check country restrictions
+            allowed_discord_ids = setts["exposed_settings"]["permitted_foreign_users"].split("|")
+            if state not in allowed_discord_ids:
+                if user_country not in setts["allowed_countries"]:
+                    print('user rejected due to their flag')
+                    return {'success': False, 'message': 'You need an Australian or New Zealand flag on your profile!'}
+            
+            print(f'osu! UserID: {user_id}')
+            print(f'Discord UserID: {state}')
+            
+            # Persist the signup
+            await self.persist_signup(state, user_id)
+            return {'success': True, 'message': "You're now registered!"}
+        
+        except Exception as e:
+            print(f"Error in process_signup: {e}")
             errorcog = self.bot.get_cog('ErrorReportingCog')
-            await errorcog.on_error('anzt.signup.handle')
-            await self.write(writer, False, 'There was an error. Diony will fix it asap.')
-        finally:
-            writer.close()
-
-    async def handle(self, reader, writer):
-        data = await reader.read()
-        data = pickle.loads(data)
-        addr = writer.get_extra_info('peername')
-        print(f"Received {data!r} from {addr!r}")
-
-        session = await res_cog(self.bot).session()
-        setts = get_setting("tourney-signup")
-
-        # See https://osu.ppy.sh/docs/index.html?bash#authorization-code-grant to see what the rest of this method is doing.
-        code = data['code']
-        state = data['state']
-        try:
-            state = Fernet(setts["key"].encode()).decrypt(state.encode()).decode()
-        except InvalidToken:
-            await self.write(writer, False, "'State' parameter is bad: try asking ANZT bot for another link.")
-            return
-
-        if await self.check_if_registered(state):
-            await self.write(writer, False, "You're already signed up!")
-            return
-        elif setts["exposed_settings"]["signups_open"] == "N":
-            await self.write(writer, False, "Signups have closed!")
-            return
-
-        print(f'Using one-time code to get authorization token')
-        data = {
-            'client_id': setts["osu_app_client_id"],
-            'client_secret': setts["osu_app_client_secret"],
-            'code': code,
-            'grant_type': 'authorization_code',
-            'redirect_uri': setts["redirect_url"]
-        }
-        # There's duplicate code here but idk how to elegantly fix that
-        async with session.post('https://osu.ppy.sh/oauth/token', data=data) as r:
-            if r.status != 200:
-                print('failed to get authorization token')
-                await self.write(writer, False, "Failed to reach osu! servers. Maybe they're down?")
-                return
-            json = await r.json()
-            access_token = json['access_token']
-
-        print('Got access token, using token to get user info')
-        headers = {'Authorization': f'Bearer {access_token}'}
-        async with session.get('https://osu.ppy.sh/api/v2/me/osu', headers=headers) as r:
-            if r.status != 200:
-                print('failed to get user info')
-                await self.write(writer, False, "Failed to reach osu! servers. Maybe they're down?")
-                return
-            json = await r.json()
-            user_country = json['country_code']
-            user_id = json['id']
-        allowed_discord_ids = setts["exposed_settings"]["permitted_foreign_users"].split("|")
-        if state not in allowed_discord_ids:
-            if user_country not in setts["allowed_countries"]:
-                print('user rejected due to their flag')
-                await self.write(writer, False, 'You need an Australian or New Zealand flag on your profile!')
-                return
-        print(f'osu! UserID: {user_id}')
-        print(f'Discord UserID: {state}')
-        await self.persist_signup(state, user_id)
-        await self.write(writer, True, "You're now registered!")
-        print("Close the connection")
-        writer.close()
+            if errorcog:
+                await errorcog.on_error('anzt.signup.process_signup')
+            return {'success': False, 'message': 'There was an error. Diony will fix it asap.'}
 
     async def check_if_registered(self, discord_id):
         async with (await self._connpool()).acquire() as conn:
@@ -267,9 +250,15 @@ class TourneySignupCog(commands.Cog):
         await ws.append_row([osu_id, osu_username, country, rank, str(disc_user), discord_id])
 
     async def give_participant_role(self, discord_id):
-        anztguild = self.bot.get_guild(199158455888642048)
+        # ANZT server
+        # anztguild = self.bot.get_guild(199158455888642048)
+        # member = anztguild.get_member(int(discord_id))
+        # role = anztguild.get_role(1254307940504965170)
+        
+        # Test server
+        anztguild = self.bot.get_guild(255990138289651713)
         member = anztguild.get_member(int(discord_id))
-        role = anztguild.get_role(1122146366215434342)
+        role = anztguild.get_role(1502604438203011082)
         await member.add_roles(role)
 
     @commands.command()
@@ -290,11 +279,15 @@ class TourneySignupCog(commands.Cog):
         await asyncio.sleep(5)
         await self.load_from_settings()
 
-        server = await asyncio.start_server(self.handler, '127.0.0.1', 7865)
-        addr = server.sockets[0].getsockname()
-        print(f'Serving on {addr}')
-        async with server:
-            await server.serve_forever()
+        set_signup_handler(self.process_signup)
+        
+        asyncio.create_task(self._run_quart_server())
+
+    async def _run_quart_server(self):
+        try:
+            await quart_app.run_task(host='127.0.0.1', port=5000)
+        except asyncio.CancelledError:
+            print('Quart server shut down')
 
 
 async def setup(bot):

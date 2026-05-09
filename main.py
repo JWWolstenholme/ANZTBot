@@ -10,10 +10,10 @@ initial_extensions = ['cogs.' + name for name in [
     'error-reporting',
     'resources',
     'tourney-signup',
-    'twitch-pickem',
-    'match-result-posting',
-    'qualifiers',
-    'amplifiers'
+    # 'twitch-pickem',
+    # 'match-result-posting',
+    # 'qualifiers',
+    # 'amplifiers'
 ]]
 
 
