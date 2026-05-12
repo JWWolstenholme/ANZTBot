@@ -53,7 +53,7 @@ Pings a set user in a set channel for uncaught errors providing a full traceback
 ## Requirements
 See [`requirements.txt`](requirements.txt) for specific packages.
 
-The following can be set in the `settings.py` file (refer [`settings_template.json`](settings_template.json)).
+The following can be set in the `settings.py` file (refer [`settings_template.json`](config/settings_template.json)).
 - A Discord bot's token. See [`discord.py`'s documentation](https://discordpy.readthedocs.io/en/latest/discord.html)
 - A Google service account's credentials to read spreadsheets. See [`gpsread`'s documentation](https://gspread.readthedocs.io/en/latest/oauth2.html) which also applies to `gspread_asyncio`
 - A Twitch Application's ID and secret. See [`python-twitch-client`'s documentation](https://python-twitch-client.readthedocs.io/en/latest/#authentication).
