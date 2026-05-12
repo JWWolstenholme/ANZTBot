@@ -10,8 +10,22 @@ See [server/README.md](server/) for details about the web server and [`tourney-s
 
 Allows users to sign up for tournaments by interacting with the bot.
 
-This uses osu!'s OAuth2 service and is used to link each user's osu! and discord accounts.<br>
-Previously we used Google Forms but this allowed people to sign up on behalf of others, regardless of their intention to play or not. In addition, form responses often contained human error.
+This uses osu!'s OAuth2 gateway and is used to link each user's osu! and discord accounts together.<br>
+Previously we used Google Forms but this allowed people to sign up on behalf of others, regardless of their intention to play or not, and form repsonses often contained human error.
+
+<details>
+
+<summary>OAuth2 Notes</summary>
+
+- [osu! OAuth2 documentation](https://osu.ppy.sh/docs/index.html?bash#authorization-code-grant)
+- In ANZTBot's case:
+    - We send the Discord user a link to osu!'s oauth gateway with our client id, redirect URI & their discord ID encrypted as the 'state' variable
+    - The user grants us access to their osu! identity
+    - User is redirected to our redirect URI where we now have a code and state variable
+    - Send our client id, client secret & code to exchange for an access token
+    - Use the access token to get the user's osu! id and decrypt the state variable from step 3 to get their discord id.
+
+</details>
 
 ![GIF showing the process of signing up](images/signup.gif)
 
