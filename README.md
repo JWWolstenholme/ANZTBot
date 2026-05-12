@@ -6,7 +6,7 @@
 ## Features:
 ### Tournament Registration System
 
-See [server/README.md](server/) for details about the web server and [`tourney-signup.py`](cogs/tourney-signup.py) for the cog that it communicates with.
+See [`tourney-signup.py`](src/cogs/tourney-signup.py) for the cog where this is implemented and [`server.py`](src/server/server.py) for the accompanying web server that the cog uses.
 
 Allows users to sign up for tournaments by interacting with the bot.
 
@@ -30,35 +30,35 @@ Previously we used Google Forms but this allowed people to sign up on behalf of 
 ![GIF showing the process of signing up](images/signup.gif)
 
 ### Match result reporting
-See [`match-result-posting.py`](cogs/match-result-posting.py) for implementation.
+See [`match-result-posting.py`](src/cogs/match-result-posting.py) for implementation.
 
 The feature is triggered by the match ID being posted in our referee's channel.<br>It fetches data from Google Sheets and the osu! API.
 
 ![Screenshot of bot's message in discord](images/match-result.png)
 
 ### Qualifier lobby registration system
-See [`qualifiers.py`](cogs/qualifiers.py) for implementation.
+See [`qualifiers.py`](src/cogs/qualifiers.py) for implementation.
 
 Allows users that are registered for the tournament to pick and choose their qualifier lobby using their discord account at any time. Referees can then check the messages below to know when to invite which osu! accounts. 
 
 ![Screenshot of bot's message in discord](images/qualifier-lobbies.png)
 
 ### Twitch channel ping
-See [`twitch-pickem.py`](cogs/twitch-pickem.py) for implementation.
+See [`twitch-pickem.py`](src/cogs/twitch-pickem.py) for implementation.
 
 Includes a command to opt-in or out of receiving these pings by giving or removing the relevant discord role.
 
 ![Screenshot of bot's message in discord](images/stream-ping.png)
 
 ### ANZT10S Amplifier Seletion
-See [`amplifiers.py`](cogs/amplifiers.py) for implementation.
+See [`amplifiers.py`](src/cogs/amplifiers.py) for implementation.
 
 The tournament [ANZT10S](https://bit.ly/ANZT10SForumPost) featured a custom gimmick where users could choose at least one modifier to their matches each week. This cog allowed ANZTBot to message each player their options each week, providing a dropdown for users to select their chosen amplifier(s) and persisting their choice in a database.
 
 ![Screenshot of bot's message in discord](images/amplifier_selection.gif)
 
 ### Discord Error reporting
-See [`error-reporting.py`](cogs/error-reporting.py) for implementation.
+See [`error-reporting.py`](src/cogs/error-reporting.py) for implementation.
 
 Pings a set user in a set channel for uncaught errors providing a full traceback and context.
 
@@ -71,7 +71,7 @@ The following can be set in the `settings.py` file (refer [`settings_template.js
 - A Discord bot's token. See [`discord.py`'s documentation](https://discordpy.readthedocs.io/en/latest/discord.html)
 - A Google service account's credentials to read spreadsheets. See [`gpsread`'s documentation](https://gspread.readthedocs.io/en/latest/oauth2.html) which also applies to `gspread_asyncio`
 - A Twitch Application's ID and secret. See [`python-twitch-client`'s documentation](https://python-twitch-client.readthedocs.io/en/latest/#authentication).
-- ~PostgreSQL database credentials for the qualifier lobbies feature~
+- PostgreSQL database credentials for the qualifier lobbies or tourney signup features.
 
 ## Important
 If you want to use this bot, you'll have to host it yourself and adapt the code to your use-case. Some coding knowledge will be required.
