@@ -67,11 +67,24 @@ Pings a set user in a set channel for uncaught errors providing a full traceback
 ## Requirements
 See [`requirements.txt`](requirements.txt) for specific packages.
 
-The following can be set in the `settings.py` file (refer [`settings_template.json`](config/settings_template.json)).
+Here are some of the most important settings you might want to set in your `settings.json` file (refer [`settings_template.jsonc`](config/settings_template.jsonc)).
 - A Discord bot's token. See [`discord.py`'s documentation](https://discordpy.readthedocs.io/en/latest/discord.html)
 - A Google service account's credentials to read spreadsheets. See [`gpsread`'s documentation](https://gspread.readthedocs.io/en/latest/oauth2.html) which also applies to `gspread_asyncio`
 - A Twitch Application's ID and secret. See [`python-twitch-client`'s documentation](https://python-twitch-client.readthedocs.io/en/latest/#authentication).
 - PostgreSQL database credentials for the qualifier lobbies or tourney signup features.
+
+## Development
+- [Install Python 3.13.3+](https://www.python.org/downloads/)
+- Create a Python virtual environment: `python -m venv .venv`
+- Activate the virtual environment:
+    - On windows: `.venv\Scripts\activate`
+    - On Linux/macOS: `source .venv/bin/activate`
+- Install required packages: `pip install -r requirements.txt`
+- Create your settings file by duplicating [`settings_template.jsonc`](config/settings_template.jsonc) and renaming it to `settings.json`.
+    - You'll need to remove all commented lines
+    - Note the difference in file extensions
+    - Fill out the settings required for the desired features
+- `python src\main.py`
 
 ## Important
 If you want to use this bot, you'll have to host it yourself and adapt the code to your use-case. Some coding knowledge will be required.
