@@ -14,8 +14,8 @@ def res_cog(bot):
     raise commands.ExtensionNotFound(cog_name)
 
 
-# Looks up one directory from this file, then to config/settings.jsonc. OS and launch location independant.
-settings_file = path.join(path.dirname(__file__), '..', 'config', 'settings.jsonc')
+# Looks up one directory from this file, then to config/settings.json. OS and launch location independant.
+settings_file = path.join(path.dirname(__file__), '..', 'config', 'settings.json')
 
 
 def _get_settings():

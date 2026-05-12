@@ -6,45 +6,59 @@
 ## Features:
 ### Tournament Registration System
 
-See [server/README.md](server/) for details about the web server and [`tourney-signup.py`](cogs/tourney-signup.py) for the cog that it communicates with.
+See [`tourney-signup.py`](src/cogs/tourney-signup.py) for the cog where this is implemented and [`server.py`](src/server/server.py) for the accompanying web server that the cog uses.
 
 Allows users to sign up for tournaments by interacting with the bot.
 
-This uses osu!'s OAuth2 service and is used to link each user's osu! and discord accounts.<br>
-Previously we used Google Forms but this allowed people to sign up on behalf of others, regardless of their intention to play or not. In addition, form responses often contained human error.
+This uses osu!'s OAuth2 gateway and is used to link each user's osu! and discord accounts together.<br>
+Previously we used Google Forms but this allowed people to sign up on behalf of others, regardless of their intention to play or not, and form repsonses often contained human error.
+
+<details>
+
+<summary>OAuth2 Notes</summary>
+
+- [osu! OAuth2 documentation](https://osu.ppy.sh/docs/index.html?bash#authorization-code-grant)
+- In ANZTBot's case:
+    - We send the Discord user a link to osu!'s oauth gateway with our client id, redirect URI & their discord ID encrypted as the 'state' variable
+    - The user grants us access to their osu! identity
+    - User is redirected to our redirect URI where we now have a code and state variable
+    - Send our client id, client secret & code to exchange for an access token
+    - Use the access token to get the user's osu! id and decrypt the state variable from step 3 to get their discord id.
+
+</details>
 
 ![GIF showing the process of signing up](images/signup.gif)
 
 ### Match result reporting
-See [`match-result-posting.py`](cogs/match-result-posting.py) for implementation.
+See [`match-result-posting.py`](src/cogs/match-result-posting.py) for implementation.
 
 The feature is triggered by the match ID being posted in our referee's channel.<br>It fetches data from Google Sheets and the osu! API.
 
 ![Screenshot of bot's message in discord](images/match-result.png)
 
 ### Qualifier lobby registration system
-See [`qualifiers.py`](cogs/qualifiers.py) for implementation.
+See [`qualifiers.py`](src/cogs/qualifiers.py) for implementation.
 
 Allows users that are registered for the tournament to pick and choose their qualifier lobby using their discord account at any time. Referees can then check the messages below to know when to invite which osu! accounts. 
 
 ![Screenshot of bot's message in discord](images/qualifier-lobbies.png)
 
 ### Twitch channel ping
-See [`twitch-pickem.py`](cogs/twitch-pickem.py) for implementation.
+See [`twitch-pickem.py`](src/cogs/twitch-pickem.py) for implementation.
 
 Includes a command to opt-in or out of receiving these pings by giving or removing the relevant discord role.
 
 ![Screenshot of bot's message in discord](images/stream-ping.png)
 
 ### ANZT10S Amplifier Seletion
-See [`amplifiers.py`](cogs/amplifiers.py) for implementation.
+See [`amplifiers.py`](src/cogs/amplifiers.py) for implementation.
 
 The tournament [ANZT10S](https://bit.ly/ANZT10SForumPost) featured a custom gimmick where users could choose at least one modifier to their matches each week. This cog allowed ANZTBot to message each player their options each week, providing a dropdown for users to select their chosen amplifier(s) and persisting their choice in a database.
 
 ![Screenshot of bot's message in discord](images/amplifier_selection.gif)
 
 ### Discord Error reporting
-See [`error-reporting.py`](cogs/error-reporting.py) for implementation.
+See [`error-reporting.py`](src/cogs/error-reporting.py) for implementation.
 
 Pings a set user in a set channel for uncaught errors providing a full traceback and context.
 
@@ -53,11 +67,24 @@ Pings a set user in a set channel for uncaught errors providing a full traceback
 ## Requirements
 See [`requirements.txt`](requirements.txt) for specific packages.
 
-The following can be set in the `settings.py` file (refer [`settings_template.json`](settings_template.json)).
+Here are some of the most important settings you might want to set in your `settings.json` file (refer [`settings_template.jsonc`](config/settings_template.jsonc)).
 - A Discord bot's token. See [`discord.py`'s documentation](https://discordpy.readthedocs.io/en/latest/discord.html)
 - A Google service account's credentials to read spreadsheets. See [`gpsread`'s documentation](https://gspread.readthedocs.io/en/latest/oauth2.html) which also applies to `gspread_asyncio`
 - A Twitch Application's ID and secret. See [`python-twitch-client`'s documentation](https://python-twitch-client.readthedocs.io/en/latest/#authentication).
-- ~PostgreSQL database credentials for the qualifier lobbies feature~
+- PostgreSQL database credentials for the qualifier lobbies or tourney signup features.
+
+## Development
+- [Install Python 3.13.3+](https://www.python.org/downloads/)
+- Create a Python virtual environment: `python -m venv .venv`
+- Activate the virtual environment:
+    - On windows: `.venv\Scripts\activate`
+    - On Linux/macOS: `source .venv/bin/activate`
+- Install required packages: `pip install -r requirements.txt`
+- Create your settings file by duplicating [`settings_template.jsonc`](config/settings_template.jsonc) and renaming it to `settings.json`.
+    - You'll need to remove all commented lines
+    - Note the difference in file extensions
+    - Fill out the settings required for the desired features
+- `python src\main.py`
 
 ## Important
 If you want to use this bot, you'll have to host it yourself and adapt the code to your use-case. Some coding knowledge will be required.

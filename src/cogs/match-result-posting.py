@@ -98,7 +98,7 @@ class MatchResultPostingCog(commands.Cog):
             #     await message.channel.send(f'{message.author.mention} Mp link (https://osu.ppy.sh/mp/{lobby_id}) looks to be incomplete. Use !mp close', delete_after=self.delete_delay)
             #     return
 
-            # Get the values of all exposed settings except the first 4 which aren't sheet references. Refer to settings_template.json.
+            # Get the values of all exposed settings except the first 4 which aren't sheet references. Refer to settings_template.jsonc.
             sheet_references = list(setts.values())[4:]
             data = await ws.batch_get(sheet_references)
             # Unwrap the double nested list that is returned but keep empty cells.
