@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - call-app-script-functions
 
 env:
   REGISTRY: ghcr.io
