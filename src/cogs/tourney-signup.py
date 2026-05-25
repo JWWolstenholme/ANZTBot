@@ -281,15 +281,19 @@ class TourneySignupCog(commands.Cog):
         await ws.append_row([osu_id, osu_username, country, rank, str(disc_user), discord_id])
 
         # Update ranks
+        asyncio.create_task(self._background_rank_updates())
+
+    async def _background_rank_updates(self):
         try:
             await self.run_update_new_player_data()
         except Exception as e:
             print(f"updateNewPlayerData failed: {e}")
-        else:
-            try:
-                await self.run_update_ranks()
-            except Exception as e:
-                print(f"updateRanks failed: {e}")
+            return
+
+        try:
+            await self.run_update_ranks()
+        except Exception as e:
+            print(f"updateRanks failed: {e}")
 
     async def give_participant_role(self, discord_id):
         # ANZT server
