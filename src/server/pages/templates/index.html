@@ -9,7 +9,8 @@
 
 <body>
     <video class="bg-video" autoplay muted loop playsinline>
-         <source src={{ url_for('static', filename='videos/background.webm') }}>
+         <source src={{ url_for('static', filename='videos/background.mp4') }} type="video/mp4">
+         <source src={{ url_for('static', filename='videos/background.webm') }} type="video/webm">
     </video>
 
     <div class="overlay"></div>
