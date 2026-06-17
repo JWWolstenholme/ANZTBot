@@ -212,6 +212,32 @@ class TourneySignupCog(commands.Cog):
                 await errorcog.on_error('anzt.signup.process_signup')
             return {'success': False, 'message': 'There was an error. Diony will fix it asap.'}
 
+    async def run_update_new_player_data(self):
+        setts = get_exposed_settings("tourney-signup")
+        url = setts["apps_script_url"]
+    
+        session = await res_cog(self.bot).session()
+        async with session.post(url, data={"action": "updateNewPlayerData"}) as resp:
+            body = await resp.text()
+            if resp.status != 200:
+                raise Exception(
+                    f"updateNewPlayerData failed: {resp.status} {body}"
+                )
+            if body.strip().lower() != "ok":
+                raise Exception(f"Unexpected response: {body}")
+    
+    async def run_update_ranks(self):
+        setts = get_exposed_settings("tourney-signup")
+        url = setts["apps_script_url"]
+    
+        session = await res_cog(self.bot).session()
+        async with session.post(url, data={"action": "updateRanks"}) as resp:
+            body = await resp.text()
+            if resp.status != 200:
+                raise Exception(f"updateRanks failed: {resp.status} {body}")
+            if body.strip().lower() != "ok":
+                raise Exception(f"Unexpected response: {body}")
+    
     async def check_if_registered(self, discord_id):
         async with (await self._connpool()).acquire() as conn:
             async with conn.transaction():
@@ -253,6 +279,21 @@ class TourneySignupCog(commands.Cog):
         country = json['country']
 
         await ws.append_row([osu_id, osu_username, country, rank, str(disc_user), discord_id])
+
+        # Update ranks
+        asyncio.create_task(self._background_rank_updates())
+
+    async def _background_rank_updates(self):
+        try:
+            await self.run_update_new_player_data()
+        except Exception as e:
+            print(f"updateNewPlayerData failed: {e}")
+            return
+
+        try:
+            await self.run_update_ranks()
+        except Exception as e:
+            print(f"updateRanks failed: {e}")
 
     async def give_participant_role(self, discord_id):
         # ANZT server
