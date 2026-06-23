@@ -254,6 +254,10 @@ class TourneySignupCog(commands.Cog):
             # Some users (about 3 in 44 users) were triggering the oauth redirect multiple times somehow, causing handle() and then persist_signup to be called twice.
             # If they're already in the database, then the other call must have beaten this call to it so we just return to handle() which will give them a success message.
             # This assumes there was no errors in the other persist_signup() call so this isn't ideal.
+            print(f"A UniqueViolationError occured when persisting in the database for [discord_id: {discord_id}, osu_id: {osu_id}]")
+            return
+        except Exception as e:
+            print(f"An error occured when persisting in the database for [discord_id: {discord_id}, osu_id: {osu_id}]\n{e}")
             return
 
         # Persist in spreadsheet
@@ -263,14 +267,17 @@ class TourneySignupCog(commands.Cog):
             sh = await agc.open_by_url(setts["sheet_url"])
         except APIError as e:
             if e.args[0]['status'] == 'PERMISSION_DENIED':
-                print('no perms. share with anzt-bot@anzt-bot.iam.gserviceaccount.com')
+                print('No permissions. Share with anzt-bot@anzt-bot.iam.gserviceaccount.com')
+            else:
+                print(f'Error persisting to the speadsheet for [discord_id: {discord_id}, osu_id: {osu_id}]:\n{e}')
             return
         ws = await sh.worksheet(setts["sheet_tab_name"])
 
+        # Give user discord role
         disc_user = self.bot.get_user(int(discord_id))
-
         await self.give_participant_role(discord_id)
 
+        # Get osu username, rank and flag
         apiKey = get_setting('osu', 'apikey')
         json = await request(f'https://osu.ppy.sh/api/get_user?k={apiKey}&u={osu_id}&type=id&m=0', self.bot)
         json = json[0]
