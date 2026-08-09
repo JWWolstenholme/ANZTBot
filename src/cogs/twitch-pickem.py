@@ -18,10 +18,10 @@ class TwitchAndPickemsCog(commands.Cog):
         self.client = twitch.TwitchHelix(client_id=setts["client_id"],
                                          client_secret=setts["client_secret"],
                                          scopes=[twitch.constants.OAUTH_SCOPE_ANALYTICS_READ_EXTENSIONS])
-        self.check_if_live.start()
+        # self.check_if_live.start()
 
-    def cog_unload(self):
-        self.check_if_live.cancel()
+    # def cog_unload(self):
+    #     self.check_if_live.cancel()
 
     async def cog_before_invoke(self, ctx):
         await ctx.message.channel.typing()
